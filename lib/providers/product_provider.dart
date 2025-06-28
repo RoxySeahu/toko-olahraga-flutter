@@ -27,7 +27,7 @@ class ProductsProvider with ChangeNotifier {
   Future<void> fetchAndSetProducts() async {
     _isLoading = true;
     notifyListeners();
-// git
+
     try {
       final QuerySnapshot querySnapshot =
           await FirebaseFirestore.instance.collection('products').get();
