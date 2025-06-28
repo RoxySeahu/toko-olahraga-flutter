@@ -6,7 +6,7 @@ class CartItem with ChangeNotifier {
   final String name;
   final int quantity;
   final double price;
-  final String imageUrl;
+  final String imageUrl; 
 
   CartItem({
     required this.id,

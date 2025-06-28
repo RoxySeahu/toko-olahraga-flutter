@@ -8,9 +8,8 @@ import 'package:toko_olahraga/providers/product_provider.dart';
 import 'package:toko_olahraga/utils/constants.dart';
 import 'package:toko_olahraga/screens/category/category_products_screen.dart';
 import 'package:toko_olahraga/screens/products/product_detail_screen.dart';
-import 'package:toko_olahraga/screens/admin/add_product_screen.dart';
-import 'package:toko_olahraga/screens/admin/products_management_screen.dart';
-import 'package:toko_olahraga/screens/home/home_screen.dart'; // Import HomeScreen
+import 'package:toko_olahraga/screens/home/home_screen.dart';
+import 'package:toko_olahraga/screens/checkout/checkout_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
@@ -42,6 +41,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
+          useMaterial3: true, // PASTIKAN INI TRUE untuk mengaktifkan Material 3 dan Badge widget
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
@@ -51,7 +51,35 @@ class MyApp extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.blue, width: 2.0),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Color.fromARGB(255, 147, 206, 218)),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+            labelStyle: TextStyle(color: Colors.grey.shade700),
+            hintStyle: TextStyle(color: Colors.grey.shade500),
+          ),
+          cardTheme: CardTheme(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            margin: const EdgeInsets.all(8.0),
           ),
         ),
         home: StreamBuilder(
@@ -61,8 +89,7 @@ class MyApp extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (userSnapshot.hasData) {
-              // Panggil konstruktor HomeScreen dengan `const` jika tidak ada parameter yang berubah
-              return const HomeScreen(); // Tidak perlu key jika sudah const
+              return const HomeScreen();
             }
             return const LoginScreen();
           },
@@ -70,15 +97,13 @@ class MyApp extends StatelessWidget {
         routes: {
           '/cart': (ctx) => const CartScreen(),
           '/register': (ctx) => const RegisterScreen(),
-          // Panggil konstruktor HomeScreen dengan `const`
           '/home': (ctx) => const HomeScreen(),
           CategoryProductsScreen.routeName: (ctx) => const CategoryProductsScreen(
             categoryTitle: '',
             categoryName: '',
           ),
           ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
-          AddProductScreen.routeName: (ctx) => const AddProductScreen(),
-          ProductsManagementScreen.routeName: (ctx) => const ProductsManagementScreen(),
+          CheckoutScreen.routeName: (ctx) => const CheckoutScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),
