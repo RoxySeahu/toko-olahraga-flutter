@@ -1,8 +1,8 @@
-// lib/screens/products/product_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
 import 'package:toko_olahraga/providers/product_provider.dart';
+import 'package:intl/intl.dart'; // Import intl
 
 class ProductDetailScreen extends StatelessWidget {
   static const routeName = '/product-detail';
@@ -17,6 +17,7 @@ class ProductDetailScreen extends StatelessWidget {
       listen: false,
     ).findById(productId);
     final cart = Provider.of<CartProvider>(context, listen: false);
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2); // Formatter
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +37,7 @@ class ProductDetailScreen extends StatelessWidget {
                   image: NetworkImage(loadedProduct.imageUrl),
                   fit: BoxFit.cover,
                   onError: (exception, stackTrace) {
-                    debugPrint('Error memuat gambar di layar detail: $exception');
+                    debugPrint('Error memuat gambar di detail screen: $exception');
                   },
                 ),
               ),
@@ -48,7 +49,8 @@ class ProductDetailScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                'Rp ${loadedProduct.price.toStringAsFixed(2)}',
+                // Format harga
+                currencyFormatter.format(loadedProduct.price),
                 style: TextStyle(
                   color: Theme.of(context).primaryColor,
                   fontSize: 28,

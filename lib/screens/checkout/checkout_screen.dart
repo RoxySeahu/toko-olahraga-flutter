@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
 import 'package:toko_olahraga/screens/home/home_screen.dart';
+import 'package:intl/intl.dart'; // Import intl
 
 class CheckoutScreen extends StatefulWidget {
   static const routeName = '/checkout';
@@ -14,13 +15,20 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _notesController = TextEditingController();
-  final _accountNumberController = TextEditingController(); // Tambah controller baru untuk nomor rekening
+  final _accountNumberController = TextEditingController();
   String? _selectedPaymentMethodCategory;
   String? _selectedBank;
   String? _selectedMobilePay;
   bool _isProcessingOrder = false;
 
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _accountNumberController.dispose();
+    super.dispose();
+  }
 
   void _placeOrder() async {
     if (!_formKey.currentState!.validate()) {
@@ -41,7 +49,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
         return;
       }
-      if (_accountNumberController.text.isEmpty) { // Validasi nomor rekening
+      if (_accountNumberController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Harap masukkan nomor rekening Anda.')),
         );
@@ -65,11 +73,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cart = Provider.of<CartProvider>(context, listen: false);
     final totalAmount = cart.totalAmount;
     final orderNotes = _notesController.text;
-    final userAccountNumber = _accountNumberController.text; // Ambil nomor rekening pengguna
+    final userAccountNumber = _accountNumberController.text;
 
     String paymentDetail = '';
     if (_selectedPaymentMethodCategory == 'bank') {
-      paymentDetail = 'Transfer Bank: ${_selectedBank!} (No. Rek: $userAccountNumber)'; // Tampilkan nomor rekening
+      paymentDetail = 'Transfer Bank: ${_selectedBank!} (No. Rek: $userAccountNumber)';
     } else if (_selectedPaymentMethodCategory == 'mobile') {
       paymentDetail = 'Mobile Payment: ${_selectedMobilePay!}';
     }
@@ -79,6 +87,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() {
       _isProcessingOrder = false;
     });
+
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2); // Formatter
 
     showDialog(
       context: context,
@@ -91,7 +101,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             const Text('Terima kasih atas pesanan Anda.'),
             const SizedBox(height: 10),
-            Text('Total Pembayaran: Rp ${totalAmount.toStringAsFixed(2)}'),
+            Text('Total Pembayaran: ${currencyFormatter.format(totalAmount)}'), // Format totalAmount
             Text('Metode Pembayaran: $paymentDetail'),
             if (orderNotes.isNotEmpty)
               Text('Catatan: $orderNotes'),
@@ -149,15 +159,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   @override
-  void dispose() {
-    _notesController.dispose();
-    _accountNumberController.dispose(); // Dispose controller nomor rekening
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2); // Formatter
 
     return Scaffold(
       appBar: AppBar(
@@ -207,7 +211,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  Text('Rp ${(item.price * item.quantity).toStringAsFixed(2)}',
+                                  // Format harga item
+                                  Text(currencyFormatter.format(item.price * item.quantity),
                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -222,7 +227,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  'Rp ${cart.totalAmount.toStringAsFixed(2)}',
+                                  // Format totalAmount
+                                  currencyFormatter.format(cart.totalAmount),
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -281,14 +287,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               onChanged: (value) {
                                 setState(() {
                                   _selectedPaymentMethodCategory = value;
-                                  _selectedMobilePay = null; // Reset mobile pay
+                                  _selectedMobilePay = null;
                                 });
                               },
                             ),
                             if (_selectedPaymentMethodCategory == 'bank')
                               Padding(
                                 padding: const EdgeInsets.only(left: 16.0, right: 8.0, bottom: 8.0),
-                                child: Column( // Menggunakan Column untuk menampung Dropdown dan TextFormField
+                                child: Column(
                                   children: [
                                     DropdownButtonFormField<String>(
                                       value: _selectedBank,
@@ -316,7 +322,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         return null;
                                       },
                                     ),
-                                    const SizedBox(height: 15), // Spasi antara dropdown dan textfield
+                                    const SizedBox(height: 15),
                                     TextFormField(
                                       controller: _accountNumberController,
                                       decoration: const InputDecoration(
@@ -346,8 +352,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               onChanged: (value) {
                                 setState(() {
                                   _selectedPaymentMethodCategory = value;
-                                  _selectedBank = null; // Reset bank
-                                  _accountNumberController.clear(); // Bersihkan nomor rekening jika ganti ke mobile pay
+                                  _selectedBank = null;
+                                  _accountNumberController.clear();
                                 });
                               },
                             ),

@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/models/cart_item.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
-import 'package:toko_olahraga/models/product.dart'; // Pastikan ini diimpor
+import 'package:toko_olahraga/models/product.dart';
+import 'package:intl/intl.dart'; // Import intl
 
 class CartItemWidget extends StatelessWidget {
   final CartItem cartItem;
+  final NumberFormat currencyFormatter; // Tambahkan properti formatter
 
-  const CartItemWidget({Key? key, required this.cartItem}) : super(key: key);
+  const CartItemWidget({
+    Key? key,
+    required this.cartItem,
+    required this.currencyFormatter, // Wajibkan formatter
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +32,9 @@ class CartItemWidget extends StatelessWidget {
           leading: CircleAvatar(
             radius: 30,
             backgroundColor: Colors.blue.shade50,
-            // Pastikan penanganan gambar sudah benar
             backgroundImage: cartItem.imageUrl.isNotEmpty
                 ? NetworkImage(cartItem.imageUrl) as ImageProvider<Object>
-                : const AssetImage('assets/images/placeholder.png'), // Pastikan ada aset ini
+                : const AssetImage('assets/images/placeholder.png'),
             onBackgroundImageError: (exception, stackTrace) {
               debugPrint('Error memuat gambar di CartItemWidget: $exception');
             },
@@ -42,7 +47,8 @@ class CartItemWidget extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           subtitle: Text(
-            'Harga: Rp ${cartItem.price.toStringAsFixed(2)}\nTotal: Rp ${(cartItem.price * cartItem.quantity).toStringAsFixed(2)}',
+            // Format harga dan total
+            'Harga: ${currencyFormatter.format(cartItem.price)}\nTotal: ${currencyFormatter.format(cartItem.price * cartItem.quantity)}',
             style: TextStyle(color: Colors.grey.shade700),
           ),
           trailing: SizedBox(

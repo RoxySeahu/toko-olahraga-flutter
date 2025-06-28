@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
+import 'package:toko_olahraga/screens/checkout/checkout_screen.dart';
 import 'package:toko_olahraga/widgets/cart_item_widget.dart';
+import 'package:intl/intl.dart'; // Import intl
 
 class CartScreen extends StatelessWidget {
-  // >>> TAMBAHKAN BARIS INI <<<
-  static const routeName = '/cart'; // Mendefinisikan routeName untuk CartScreen
+  static const routeName = '/cart';
 
   const CartScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2); // Formatter
 
     return Scaffold(
       appBar: AppBar(
@@ -34,7 +36,8 @@ class CartScreen extends StatelessWidget {
                   const Spacer(),
                   Chip(
                     label: Text(
-                      'Rp ${cart.totalAmount.toStringAsFixed(2)}',
+                      // Format totalAmount
+                      currencyFormatter.format(cart.totalAmount),
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
@@ -45,8 +48,7 @@ class CartScreen extends StatelessWidget {
                     onPressed: cart.totalAmount <= 0
                         ? null
                         : () {
-                            // Menggunakan CartScreen.routeName yang baru didefinisikan
-                            Navigator.of(context).pushNamed(CartScreen.routeName);
+                            Navigator.of(context).pushNamed(CheckoutScreen.routeName);
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
@@ -133,8 +135,10 @@ class CartScreen extends StatelessWidget {
                             ),
                           );
                         },
+                        // Gunakan CartItemWidget, yang juga akan diperbarui
                         child: CartItemWidget(
                           cartItem: cartItem,
+                          currencyFormatter: currencyFormatter, // Teruskan formatter
                         ),
                       );
                     },
