@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
 import 'package:toko_olahraga/screens/home/home_screen.dart';
-import 'package:intl/intl.dart'; // Import intl
+import 'package:intl/intl.dart'; 
 
 class CheckoutScreen extends StatefulWidget {
   static const routeName = '/checkout';
@@ -15,7 +15,9 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _notesController = TextEditingController();
-  final _accountNumberController = TextEditingController();
+  final _accountNumberController = TextEditingController(); // Untuk nomor rekening bank
+  final _mobilePaymentNumberController = TextEditingController(); // <<<< Tambah controller baru untuk nomor mobile payment
+  
   String? _selectedPaymentMethodCategory;
   String? _selectedBank;
   String? _selectedMobilePay;
@@ -27,6 +29,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void dispose() {
     _notesController.dispose();
     _accountNumberController.dispose();
+    _mobilePaymentNumberController.dispose(); // <<<< Dispose controller baru
     super.dispose();
   }
 
@@ -57,11 +60,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
     }
 
-    if (_selectedPaymentMethodCategory == 'mobile' && _selectedMobilePay == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap pilih metode pembayaran mobile Anda.')),
-      );
-      return;
+    if (_selectedPaymentMethodCategory == 'mobile') { // Validasi untuk mobile payment
+      if (_selectedMobilePay == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Harap pilih metode pembayaran mobile Anda.')),
+        );
+        return;
+      }
+      if (_mobilePaymentNumberController.text.isEmpty) { // <<<< Validasi nomor mobile payment
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Harap masukkan nomor ${_selectedMobilePay!} Anda.')),
+        );
+        return;
+      }
     }
 
     setState(() {
@@ -74,12 +85,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final totalAmount = cart.totalAmount;
     final orderNotes = _notesController.text;
     final userAccountNumber = _accountNumberController.text;
+    final userMobilePaymentNumber = _mobilePaymentNumberController.text; // <<<< Ambil nomor mobile payment pengguna
 
     String paymentDetail = '';
     if (_selectedPaymentMethodCategory == 'bank') {
       paymentDetail = 'Transfer Bank: ${_selectedBank!} (No. Rek: $userAccountNumber)';
     } else if (_selectedPaymentMethodCategory == 'mobile') {
-      paymentDetail = 'Mobile Payment: ${_selectedMobilePay!}';
+      paymentDetail = 'Mobile Payment: ${_selectedMobilePay!} (No. Pembayaran: $userMobilePaymentNumber)'; // <<<< Tampilkan nomor mobile payment
     }
 
     cart.clearCart();
@@ -88,7 +100,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _isProcessingOrder = false;
     });
 
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2); // Formatter
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2);
 
     showDialog(
       context: context,
@@ -101,7 +113,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             const Text('Terima kasih atas pesanan Anda.'),
             const SizedBox(height: 10),
-            Text('Total Pembayaran: ${currencyFormatter.format(totalAmount)}'), // Format totalAmount
+            Text('Total Pembayaran: ${currencyFormatter.format(totalAmount)}'),
             Text('Metode Pembayaran: $paymentDetail'),
             if (orderNotes.isNotEmpty)
               Text('Catatan: $orderNotes'),
@@ -126,7 +138,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   Text('Lakukan pembayaran melalui aplikasi ${_selectedMobilePay!}.'),
                   const SizedBox(height: 5),
-                  const Text('ID/Nomor Telepon: 081234567890 (a/n Toko Olahraga)'),
+                  Text('ID/Nomor Telepon Toko: 081234567890 (a/n Toko Olahraga)'), // Nomor tujuan toko
                   const Text('Atau scan QR Code berikut (simulasi):'),
                   const SizedBox(height: 10),
                   Container(
@@ -136,6 +148,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     alignment: Alignment.center,
                     child: const Text('QR Code Simulasi', textAlign: TextAlign.center),
                   ),
+                  const SizedBox(height: 10), // Spasi sebelum info nomor pengguna
+                  const Text('Anda telah memasukkan nomor pembayaran:'), // <<<< Tampilkan nomor mobile payment pengguna
+                  Text('Nomor ${_selectedMobilePay!} Anda: $userMobilePaymentNumber', style: const TextStyle(fontWeight: FontWeight.bold)), // <<<< Tampilkan nomor mobile payment pengguna
                 ],
               ),
             const SizedBox(height: 10),
@@ -161,7 +176,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2); // Formatter
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2);
 
     return Scaffold(
       appBar: AppBar(
@@ -211,7 +226,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  // Format harga item
                                   Text(currencyFormatter.format(item.price * item.quantity),
                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
@@ -227,7 +241,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  // Format totalAmount
                                   currencyFormatter.format(cart.totalAmount),
                                   style: TextStyle(
                                     fontSize: 20,
@@ -288,6 +301,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 setState(() {
                                   _selectedPaymentMethodCategory = value;
                                   _selectedMobilePay = null;
+                                  _mobilePaymentNumberController.clear(); // Bersihkan nomor mobile pay
                                 });
                               },
                             ),
@@ -353,38 +367,60 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 setState(() {
                                   _selectedPaymentMethodCategory = value;
                                   _selectedBank = null;
-                                  _accountNumberController.clear();
+                                  _accountNumberController.clear(); // Bersihkan nomor rekening
                                 });
                               },
                             ),
                             if (_selectedPaymentMethodCategory == 'mobile')
                               Padding(
                                 padding: const EdgeInsets.only(left: 16.0, right: 8.0, bottom: 8.0),
-                                child: DropdownButtonFormField<String>(
-                                  value: _selectedMobilePay,
-                                  hint: const Text('Pilih Mobile Payment'),
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)
-                                  ),
-                                  items: <String>['Dana', 'GoPay', 'OVO', 'LinkAja', 'ShopeePay', 'Lainnya']
-                                      .map<DropdownMenuItem<String>>((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      _selectedMobilePay = newValue;
-                                    });
-                                  },
-                                  validator: (value) {
-                                    if (_selectedPaymentMethodCategory == 'mobile' && (value == null || value.isEmpty)) {
-                                      return 'Harap pilih mobile payment.';
-                                    }
-                                    return null;
-                                  },
+                                child: Column( // <<<< Tambahkan Column untuk menampung Dropdown dan TextFormField
+                                  children: [
+                                    DropdownButtonFormField<String>(
+                                      value: _selectedMobilePay,
+                                      hint: const Text('Pilih Mobile Payment'),
+                                      decoration: const InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                                      ),
+                                      items: <String>['Dana', 'GoPay', 'OVO', 'LinkAja', 'ShopeePay', 'Lainnya']
+                                          .map<DropdownMenuItem<String>>((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          _selectedMobilePay = newValue;
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (_selectedPaymentMethodCategory == 'mobile' && (value == null || value.isEmpty)) {
+                                          return 'Harap pilih mobile payment.';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 15), // Spasi antara dropdown dan textfield
+                                    TextFormField( // <<<< TextFormField baru untuk nomor mobile payment
+                                      controller: _mobilePaymentNumberController,
+                                      decoration: InputDecoration(
+                                        labelText: 'Nomor ${_selectedMobilePay ?? 'Mobile Payment'} Anda',
+                                        hintText: 'Masukkan nomor telepon/ID Anda',
+                                      ),
+                                      keyboardType: TextInputType.phone, // Keyboard telepon
+                                      validator: (value) {
+                                        if (_selectedPaymentMethodCategory == 'mobile' && (value == null || value.isEmpty)) {
+                                          return 'Harap masukkan nomor pembayaran Anda.';
+                                        }
+                                        if (_selectedPaymentMethodCategory == 'mobile' && !RegExp(r'^[0-9]+$').hasMatch(value!)) {
+                                          return 'Nomor pembayaran hanya boleh angka.';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                           ],
