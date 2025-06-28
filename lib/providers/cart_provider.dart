@@ -10,7 +10,11 @@ class CartProvider with ChangeNotifier {
   }
 
   int get itemCount {
-    return _items.length;
+    int total = 0;
+    _items.forEach((key, cartItem) {
+      total += cartItem.quantity;
+    });
+    return total;
   }
 
   double get totalAmount {

@@ -4,8 +4,8 @@ import 'package:toko_olahraga/providers/product_provider.dart';
 import 'package:toko_olahraga/widgets/product_item.dart';
 import 'package:toko_olahraga/widgets/app_drawer.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
-import 'package:toko_olahraga/screens/category/category_products_screen.dart'; // Import untuk navigasi kategori
-import 'package:toko_olahraga/models/product.dart'; // BARIS INI DITAMBAHKAN
+import 'package:toko_olahraga/screens/category/category_products_screen.dart';
+import 'package:toko_olahraga/models/product.dart'; // Pastikan ini diimpor
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,13 +18,11 @@ class _HomeScreenState extends State<HomeScreen> {
   var _showFavoritesOnly = false;
   var _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
-  List<Product> _filteredProducts = []; // Tidak ada error lagi setelah import Product
+  List<Product> _filteredProducts = [];
 
   @override
   void initState() {
     super.initState();
-    // Ambil produk saat layar diinisialisasi
-    // Perhatikan: `listen: false` di `initState` adalah praktik yang baik.
     Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
   }
 
@@ -45,11 +43,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // `listen: true` di `build` untuk merespons perubahan data
     final productsData = Provider.of<ProductsProvider>(context);
     final productsToDisplay = _showFavoritesOnly ? productsData.favoriteProducts : productsData.products;
 
-    // Mendapatkan daftar kategori unik
     final List<String> categories = productsData.products.map((p) => p.category).toSet().toList();
 
     return Scaffold(
@@ -77,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _isSearching = !_isSearching;
                 if (!_isSearching) {
                   _searchController.clear();
-                  _filteredProducts = []; // Hapus produk yang difilter saat pencarian ditutup
+                  _filteredProducts = [];
                 }
               });
             },
@@ -141,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               itemBuilder: (ctx, i) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                                  child: ActionChip( // Menggunakan ActionChip untuk kategori yang bisa diklik
+                                  child: ActionChip(
                                     label: Text(categories[i]),
                                     onPressed: () {
                                       Navigator.of(context).pushNamed(

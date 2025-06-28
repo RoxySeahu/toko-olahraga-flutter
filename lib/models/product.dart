@@ -7,11 +7,7 @@ class Product with ChangeNotifier {
   final double price;
   final String imageUrl;
   final String category;
-
-  // Ubah ini dari parameter bernama menjadi parameter opsional biasa,
-  // atau beri nama parameter yang tidak diawali underscore.
-  // Pilihan terbaik adalah langsung inisialisasi field privat.
-  bool _isFavorite;
+  bool isFavorite;
 
   Product({
     required this.id,
@@ -20,20 +16,8 @@ class Product with ChangeNotifier {
     required this.price,
     required this.imageUrl,
     required this.category,
-    bool isFavorite = false, // Ganti `this._isFavorite` menjadi `bool isFavorite`
-  }) : _isFavorite = isFavorite; // Inisialisasi field privat di initializer list
-
-  factory Product.fromFirestore(Map<String, dynamic> data, String id) {
-    return Product(
-      id: id,
-      name: data['name'] ?? '',
-      description: data['description'] ?? '',
-      price: (data['price'] as num?)?.toDouble() ?? 0.0,
-      imageUrl: data['imageUrl'] ?? '',
-      category: data['category'] ?? '',
-      isFavorite: data['isFavorite'] ?? false, // Pastikan ini juga menggunakan `isFavorite`
-    );
-  }
+    this.isFavorite = false,
+  });
 
   Map<String, dynamic> toFirestore() {
     return {
@@ -42,14 +26,24 @@ class Product with ChangeNotifier {
       'price': price,
       'imageUrl': imageUrl,
       'category': category,
-      'isFavorite': _isFavorite,
+      'isFavorite': isFavorite,
     };
   }
 
-  bool get isFavorite => _isFavorite;
+  factory Product.fromFirestore(Map<String, dynamic> data, String id) {
+    return Product(
+      id: id,
+      name: data['name'] ?? '',
+      description: data['description'] ?? '',
+      price: (data['price'] ?? 0.0).toDouble(),
+      imageUrl: data['imageUrl'] ?? '',
+      category: data['category'] ?? 'Uncategorized',
+      isFavorite: data['isFavorite'] ?? false,
+    );
+  }
 
   void toggleFavoriteStatus() {
-    _isFavorite = !_isFavorite;
+    isFavorite = !isFavorite;
     notifyListeners();
   }
 }

@@ -1,6 +1,7 @@
+// lib/providers/product_provider.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:toko_olahraga/models/product.dart';
+import '../models/product.dart';
 
 class ProductsProvider with ChangeNotifier {
   List<Product> _products = [];
@@ -20,51 +21,57 @@ class ProductsProvider with ChangeNotifier {
     return _products.firstWhere((prod) => prod.id == id);
   }
 
+  // >>> TAMBAHKAN METODE INI <<<
   List<Product> getProductsByCategory(String categoryName) {
-    return _products.where((product) => product.category == categoryName).toList();
+    return _products.where((prod) => prod.category == categoryName).toList();
   }
+  // >>> AKHIR TAMBAHAN <<<
 
   Future<void> fetchAndSetProducts() async {
     _isLoading = true;
     notifyListeners();
-
     try {
-      final QuerySnapshot querySnapshot =
-          await FirebaseFirestore.instance.collection('products').get();
+      final querySnapshot = await FirebaseFirestore.instance.collection('products').get();
       final List<Product> loadedProducts = [];
-      for (var doc in querySnapshot.docs) {
-        loadedProducts.add(Product.fromFirestore(doc.data() as Map<String, dynamic>, doc.id));
-      }
+      querySnapshot.docs.forEach((doc) {
+        loadedProducts.add(Product.fromFirestore(doc.data(), doc.id));
+      });
       _products = loadedProducts;
-    } catch (error) {
-      debugPrint('Error fetching products: $error');
-      rethrow;
-    } finally {
       _isLoading = false;
       notifyListeners();
-    }
-  }
-
-  // Metode untuk menambahkan produk (akan dipanggil dari AdminService atau langsung dari UI admin)
-  Future<void> addProduct(Product product) async {
-    try {
-      // Jika product.id sudah ada (misal dari edit), gunakan itu. Jika tidak, Firestore akan membuat ID baru.
-      await FirebaseFirestore.instance.collection('products').doc(product.id.isEmpty ? null : product.id).set(product.toFirestore());
-      await fetchAndSetProducts(); // Muat ulang daftar produk setelah penambahan
     } catch (error) {
-      debugPrint('Error adding product: $error');
+      _isLoading = false;
+      notifyListeners();
+      debugPrint('Error fetching products: $error');
       rethrow;
     }
   }
 
-  // Metode untuk menghapus produk
-  Future<void> deleteProduct(String productId) async {
+  Future<void> updateProduct(String id, Product newProduct) async {
+    final prodIndex = _products.indexWhere((prod) => prod.id == id);
+    if (prodIndex >= 0) {
+      try {
+        await FirebaseFirestore.instance.collection('products').doc(id).update(newProduct.toFirestore());
+        _products[prodIndex] = newProduct;
+        notifyListeners();
+      } catch (error) {
+        debugPrint('Error updating product: $error');
+        rethrow;
+      }
+    }
+  }
+
+  Future<void> deleteProduct(String id) async {
+    final existingProductIndex = _products.indexWhere((prod) => prod.id == id);
+    Product? existingProduct = _products[existingProductIndex];
+    _products.removeAt(existingProductIndex);
+    notifyListeners();
+
     try {
-      await FirebaseFirestore.instance.collection('products').doc(productId).delete();
-      _products.removeWhere((prod) => prod.id == productId);
-      notifyListeners();
-      await fetchAndSetProducts(); // Muat ulang setelah penghapusan
+      await FirebaseFirestore.instance.collection('products').doc(id).delete();
     } catch (error) {
+      _products.insert(existingProductIndex, existingProduct);
+      notifyListeners();
       debugPrint('Error deleting product: $error');
       rethrow;
     }

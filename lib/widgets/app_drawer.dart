@@ -34,6 +34,7 @@ class AppDrawer extends StatelessWidget {
               Navigator.of(context).pushNamed('/cart');
             },
           ),
+          // Bagian untuk "Kelola Produk" atau Admin DIHAPUS dari sini
           const Divider(),
           ListTile(
             leading: const Icon(Icons.exit_to_app),

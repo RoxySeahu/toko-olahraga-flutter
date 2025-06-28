@@ -9,10 +9,11 @@ import 'package:toko_olahraga/utils/constants.dart';
 import 'package:toko_olahraga/screens/category/category_products_screen.dart';
 import 'package:toko_olahraga/screens/products/product_detail_screen.dart';
 import 'package:toko_olahraga/screens/home/home_screen.dart';
-import 'package:toko_olahraga/screens/checkout/checkout_screen.dart';
+import 'package:toko_olahraga/screens/checkout/checkout_screen.dart'; // Import untuk layar checkout
 import 'package:firebase_core/firebase_core.dart';
+import 'package:toko_olahraga/firebase_options.dart'; // SESUAIKAN DENGAN PATH ANDA
 import 'package:firebase_auth/firebase_auth.dart';
-import 'firebase_options.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
-          useMaterial3: true, // PASTIKAN INI TRUE untuk mengaktifkan Material 3 dan Badge widget
+          useMaterial3: true,
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
@@ -68,7 +69,7 @@ class MyApp extends StatelessWidget {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Color.fromARGB(255, 147, 206, 218)),
+              borderSide: const BorderSide(color: Color.fromARGB(255, 103, 176, 187)),
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
             labelStyle: TextStyle(color: Colors.grey.shade700),
@@ -104,6 +105,8 @@ class MyApp extends StatelessWidget {
           ),
           ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
           CheckoutScreen.routeName: (ctx) => const CheckoutScreen(),
+          // Pastikan semua rute admin DIHAPUS dari sini jika Anda tidak ingin fitur admin
+          // products_management_screen.dart dan add_product_screen.dart
         },
         debugShowCheckedModeBanner: false,
       ),

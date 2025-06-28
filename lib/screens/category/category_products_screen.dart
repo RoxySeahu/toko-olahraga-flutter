@@ -1,10 +1,11 @@
+// lib/screens/category/category_products_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/product_provider.dart';
-import 'package:toko_olahraga/widgets/product_item.dart';
+import 'package:toko_olahraga/widgets/product_item.dart'; // Pastikan ini diimpor
 
-class CategoryProductsScreen extends StatelessWidget {
-  static const routeName = '/category-products';
+class CategoryProductsScreen extends StatefulWidget {
+  static const routeName = '/category-products'; // Tetapkan routeName
 
   final String categoryTitle;
   final String categoryName;
@@ -16,25 +17,34 @@ class CategoryProductsScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<CategoryProductsScreen> createState() => _CategoryProductsScreenState();
+}
+
+class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
+  // Pastikan Anda memuat data produk jika belum dimuat atau memfilter dari yang sudah ada
+  // Karena ProductsProvider sudah memiliki fetchAndSetProducts() yang dipanggil di HomeScreen,
+  // di sini kita hanya perlu mendapatkan produk berdasarkan kategori.
+
+  @override
   Widget build(BuildContext context) {
-    final Map<String, String>? args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
-    final String actualCategoryTitle = args?['categoryTitle'] ?? categoryTitle;
-    final String actualCategoryName = args?['categoryName'] ?? categoryName;
+    final productsData = Provider.of<ProductsProvider>(context);
+    // Baris yang Anda minta untuk diperbaiki:
+    final categoryProducts = productsData.getProductsByCategory(widget.categoryName); // Memanggil metode yang baru ditambahkan
 
-    // Menggunakan Consumer karena data produk sudah tersedia melalui ProductsProvider
-    return Consumer<ProductsProvider>(
-      builder: (ctx, productsData, child) {
-        final categoryProducts = productsData.getProductsByCategory(actualCategoryName);
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(actualCategoryTitle),
-          ),
-          body: categoryProducts.isEmpty
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.categoryTitle),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: productsData.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : categoryProducts.isEmpty
               ? Center(
                   child: Text(
-                    'Tidak ada produk dalam kategori ${actualCategoryTitle}.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    'Tidak ada produk di kategori "${widget.categoryTitle}" saat ini.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 )
               : GridView.builder(
@@ -51,8 +61,6 @@ class CategoryProductsScreen extends StatelessWidget {
                     child: const ProductItem(),
                   ),
                 ),
-        );
-      },
     );
   }
 }
