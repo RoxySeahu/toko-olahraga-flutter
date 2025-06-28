@@ -1,0 +1,38 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "toko-olahraga-55233",
+          "appId": "1:486242738202:android:46998e2b655f8f8b7771a3",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "toko-olahraga-55233",
+          "configurations": {
+            "android": "1:486242738202:android:46998e2b655f8f8b7771a3",
+            "ios": "1:486242738202:ios:bca7f55f9935f3137771a3",
+            "web": "1:486242738202:web:33115fb7aac4e2a77771a3",
+            "windows": "1:486242738202:web:a13dcb96ceca19907771a3"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

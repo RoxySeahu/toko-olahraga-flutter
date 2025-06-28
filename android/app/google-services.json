@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "486242738202",
+    "project_id": "toko-olahraga-55233",
+    "storage_bucket": "toko-olahraga-55233.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:486242738202:android:46998e2b655f8f8b7771a3",
+        "android_client_info": {
+          "package_name": "com.example.toko_olahraga"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaoIfcR9e7pVU5vgCFjyYbE_PpFMp3Gko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
