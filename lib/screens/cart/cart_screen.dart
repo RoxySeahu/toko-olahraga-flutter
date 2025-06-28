@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
-import 'package:toko_olahraga/screens/checkout/checkout_screen.dart';
-import 'package:toko_olahraga/widgets/cart_item_widget.dart'; // Import CartItemWidget dari folder widgets
+import 'package:toko_olahraga/widgets/cart_item_widget.dart';
 
 class CartScreen extends StatelessWidget {
+  // >>> TAMBAHKAN BARIS INI <<<
+  static const routeName = '/cart'; // Mendefinisikan routeName untuk CartScreen
+
   const CartScreen({Key? key}) : super(key: key);
 
   @override
@@ -41,9 +43,10 @@ class CartScreen extends StatelessWidget {
                   const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: cart.totalAmount <= 0
-                        ? null // Nonaktifkan tombol jika keranjang kosong
+                        ? null
                         : () {
-                            Navigator.of(context).pushNamed(CheckoutScreen.routeName);
+                            // Menggunakan CartScreen.routeName yang baru didefinisikan
+                            Navigator.of(context).pushNamed(CartScreen.routeName);
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
@@ -130,7 +133,7 @@ class CartScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        child: CartItemWidget( // Menggunakan widget CartItemWidget terpisah
+                        child: CartItemWidget(
                           cartItem: cartItem,
                         ),
                       );

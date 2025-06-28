@@ -1,4 +1,3 @@
-// lib/widgets/cart_item_widget.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/models/cart_item.dart';
@@ -13,7 +12,7 @@ class CartItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context, listen: false);
-    const String defaultCategory = 'General'; // Mengasumsikan kategori default
+    const String defaultCategory = 'General';
 
     return Card(
       margin: const EdgeInsets.symmetric(
@@ -27,9 +26,10 @@ class CartItemWidget extends StatelessWidget {
           leading: CircleAvatar(
             radius: 30,
             backgroundColor: Colors.blue.shade50,
+            // Pastikan penanganan gambar sudah benar
             backgroundImage: cartItem.imageUrl.isNotEmpty
                 ? NetworkImage(cartItem.imageUrl) as ImageProvider<Object>
-                : const AssetImage('assets/images/placeholder.png'), // Fallback asset
+                : const AssetImage('assets/images/placeholder.png'), // Pastikan ada aset ini
             onBackgroundImageError: (exception, stackTrace) {
               debugPrint('Error memuat gambar di CartItemWidget: $exception');
             },
@@ -66,7 +66,7 @@ class CartItemWidget extends StatelessWidget {
                     cart.addItem(Product(
                       id: cartItem.productId,
                       name: cartItem.name,
-                      description: 'Deskripsi tidak tersedia di cart item', // Placeholder
+                      description: 'Deskripsi tidak tersedia di cart item',
                       price: cartItem.price,
                       imageUrl: cartItem.imageUrl,
                       category: defaultCategory,

@@ -1,8 +1,7 @@
-// lib/screens/checkout/checkout_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
-import 'package:toko_olahraga/screens/home/home_screen.dart'; // Untuk navigasi kembali ke home
+import 'package:toko_olahraga/screens/home/home_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   static const routeName = '/checkout';
@@ -15,6 +14,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _notesController = TextEditingController();
+  final _accountNumberController = TextEditingController(); // Tambah controller baru untuk nomor rekening
   String? _selectedPaymentMethodCategory;
   String? _selectedBank;
   String? _selectedMobilePay;
@@ -23,22 +23,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
 
   void _placeOrder() async {
-    // Validasi input DropdownButtonFormField (jika salah satu kategori dipilih)
-    if (_selectedPaymentMethodCategory == 'bank' && _selectedBank == null) {
-      _formKey.currentState!.validate(); // Trigger validation for dropdown
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap pilih bank Anda.')),
-      );
+    if (!_formKey.currentState!.validate()) {
       return;
     }
-    if (_selectedPaymentMethodCategory == 'mobile' && _selectedMobilePay == null) {
-      _formKey.currentState!.validate(); // Trigger validation for dropdown
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap pilih metode pembayaran mobile Anda.')),
-      );
-      return;
-    }
-
 
     if (_selectedPaymentMethodCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,6 +34,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
+    if (_selectedPaymentMethodCategory == 'bank') {
+      if (_selectedBank == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Harap pilih bank Anda.')),
+        );
+        return;
+      }
+      if (_accountNumberController.text.isEmpty) { // Validasi nomor rekening
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Harap masukkan nomor rekening Anda.')),
+        );
+        return;
+      }
+    }
+
+    if (_selectedPaymentMethodCategory == 'mobile' && _selectedMobilePay == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih metode pembayaran mobile Anda.')),
+      );
+      return;
+    }
 
     setState(() {
       _isProcessingOrder = true;
@@ -57,10 +65,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cart = Provider.of<CartProvider>(context, listen: false);
     final totalAmount = cart.totalAmount;
     final orderNotes = _notesController.text;
+    final userAccountNumber = _accountNumberController.text; // Ambil nomor rekening pengguna
 
     String paymentDetail = '';
     if (_selectedPaymentMethodCategory == 'bank') {
-      paymentDetail = 'Transfer Bank: ${_selectedBank!}';
+      paymentDetail = 'Transfer Bank: ${_selectedBank!} (No. Rek: $userAccountNumber)'; // Tampilkan nomor rekening
     } else if (_selectedPaymentMethodCategory == 'mobile') {
       paymentDetail = 'Mobile Payment: ${_selectedMobilePay!}';
     }
@@ -91,11 +100,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Lakukan transfer ke rekening berikut:'),
+                  const Text('Lakukan transfer ke rekening tujuan:'),
                   const SizedBox(height: 5),
-                  Text('Bank: ${_selectedBank!}'),
-                  const Text('Nomor Rekening: 1234567890 (a/n Toko Olahraga)'),
+                  Text('Bank Tujuan: ${_selectedBank!}'),
+                  const Text('Nomor Rekening Tujuan: 1234567890 (a/n Toko Olahraga)'),
                   const Text('Kode Transfer (jika ada): 1234'),
+                  const SizedBox(height: 10),
+                  const Text('Anda telah memasukkan nomor rekening:'),
+                  Text('Nomor Rekening Anda: $userAccountNumber', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               )
             else if (_selectedPaymentMethodCategory == 'mobile')
@@ -139,6 +151,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   void dispose() {
     _notesController.dispose();
+    _accountNumberController.dispose(); // Dispose controller nomor rekening
     super.dispose();
   }
 
@@ -275,31 +288,53 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             if (_selectedPaymentMethodCategory == 'bank')
                               Padding(
                                 padding: const EdgeInsets.only(left: 16.0, right: 8.0, bottom: 8.0),
-                                child: DropdownButtonFormField<String>(
-                                  value: _selectedBank,
-                                  hint: const Text('Pilih Bank'),
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)
-                                  ),
-                                  items: <String>['Bank BRI', 'Bank BNI', 'Bank Mandiri', 'Bank BCA', 'Bank Lainnya']
-                                      .map<DropdownMenuItem<String>>((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      _selectedBank = newValue;
-                                    });
-                                  },
-                                  validator: (value) {
-                                    if (_selectedPaymentMethodCategory == 'bank' && (value == null || value.isEmpty)) {
-                                      return 'Harap pilih bank.';
-                                    }
-                                    return null;
-                                  },
+                                child: Column( // Menggunakan Column untuk menampung Dropdown dan TextFormField
+                                  children: [
+                                    DropdownButtonFormField<String>(
+                                      value: _selectedBank,
+                                      hint: const Text('Pilih Bank'),
+                                      decoration: const InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                                      ),
+                                      items: <String>['Bank BRI', 'Bank BNI', 'Bank Mandiri', 'Bank BCA', 'Bank Lainnya']
+                                          .map<DropdownMenuItem<String>>((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          _selectedBank = newValue;
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (_selectedPaymentMethodCategory == 'bank' && (value == null || value.isEmpty)) {
+                                          return 'Harap pilih bank.';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 15), // Spasi antara dropdown dan textfield
+                                    TextFormField(
+                                      controller: _accountNumberController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Nomor Rekening Anda',
+                                        hintText: 'Masukkan nomor rekening Anda',
+                                      ),
+                                      keyboardType: TextInputType.number,
+                                      validator: (value) {
+                                        if (_selectedPaymentMethodCategory == 'bank' && (value == null || value.isEmpty)) {
+                                          return 'Harap masukkan nomor rekening Anda.';
+                                        }
+                                        if (_selectedPaymentMethodCategory == 'bank' && !RegExp(r'^[0-9]+$').hasMatch(value!)) {
+                                          return 'Nomor rekening hanya boleh angka.';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                             const Divider(),
@@ -312,6 +347,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 setState(() {
                                   _selectedPaymentMethodCategory = value;
                                   _selectedBank = null; // Reset bank
+                                  _accountNumberController.clear(); // Bersihkan nomor rekening jika ganti ke mobile pay
                                 });
                               },
                             ),

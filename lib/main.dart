@@ -1,18 +1,22 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:toko_olahraga/firebase_options.dart';
+
+import 'package:toko_olahraga/providers/product_provider.dart';
+import 'package:toko_olahraga/providers/cart_provider.dart';
+import 'package:toko_olahraga/screens/home/home_screen.dart';
+import 'package:toko_olahraga/screens/products/product_detail_screen.dart';
+import 'package:toko_olahraga/screens/cart/cart_screen.dart';
+import 'package:toko_olahraga/screens/admin/products_management_screen.dart';
+import 'package:toko_olahraga/screens/admin/add_product_screen.dart';
+import 'package:toko_olahraga/screens/category/category_products_screen.dart';
 import 'package:toko_olahraga/screens/auth/login_screen.dart';
 import 'package:toko_olahraga/screens/auth/register_screen.dart';
-import 'package:toko_olahraga/screens/cart/cart_screen.dart';
-import 'package:toko_olahraga/providers/cart_provider.dart';
-import 'package:toko_olahraga/providers/product_provider.dart';
-import 'package:toko_olahraga/utils/constants.dart';
-import 'package:toko_olahraga/screens/category/category_products_screen.dart';
-import 'package:toko_olahraga/screens/products/product_detail_screen.dart';
-import 'package:toko_olahraga/screens/home/home_screen.dart';
-import 'package:toko_olahraga/screens/checkout/checkout_screen.dart'; // Import untuk layar checkout
-import 'package:firebase_core/firebase_core.dart';
-import 'package:toko_olahraga/firebase_options.dart'; // SESUAIKAN DENGAN PATH ANDA
+import 'package:toko_olahraga/screens/checkout/checkout_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:toko_olahraga/utils/constants.dart';
 
 
 void main() async {
@@ -31,10 +35,10 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => CartProvider(),
+          create: (ctx) => ProductsProvider(),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => ProductsProvider(),
+          create: (ctx) => CartProvider(),
         ),
       ],
       child: MaterialApp(
@@ -69,7 +73,7 @@ class MyApp extends StatelessWidget {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Color.fromARGB(255, 103, 176, 187)),
+              borderSide: const BorderSide(color: Color.fromARGB(255, 101, 175, 171)),
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
             labelStyle: TextStyle(color: Colors.grey.shade700),
@@ -96,17 +100,24 @@ class MyApp extends StatelessWidget {
           },
         ),
         routes: {
-          '/cart': (ctx) => const CartScreen(),
+          ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
+          // Menggunakan CartScreen.routeName yang sudah didefinisikan
+          CartScreen.routeName: (ctx) => const CartScreen(), // Dapat menjadi const kembali jika tidak ada isu internal
+
           '/register': (ctx) => const RegisterScreen(),
           '/home': (ctx) => const HomeScreen(),
-          CategoryProductsScreen.routeName: (ctx) => const CategoryProductsScreen(
-            categoryTitle: '',
-            categoryName: '',
-          ),
-          ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
           CheckoutScreen.routeName: (ctx) => const CheckoutScreen(),
-          // Pastikan semua rute admin DIHAPUS dari sini jika Anda tidak ingin fitur admin
-          // products_management_screen.dart dan add_product_screen.dart
+
+          CategoryProductsScreen.routeName: (ctx) {
+            final args = ModalRoute.of(ctx)!.settings.arguments as Map<String, String>?;
+            return CategoryProductsScreen(
+              categoryName: args?['categoryName'] ?? '',
+              categoryTitle: args?['categoryTitle'] ?? '',
+            );
+          },
+
+          ProductsManagementScreen.routeName: (ctx) => const ProductsManagementScreen(),
+          AddProductScreen.routeName: (ctx) => const AddProductScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),

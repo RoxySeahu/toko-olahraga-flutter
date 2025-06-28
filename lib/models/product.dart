@@ -1,3 +1,4 @@
+// lib/models/product.dart
 import 'package:flutter/foundation.dart';
 
 class Product with ChangeNotifier {
@@ -6,7 +7,7 @@ class Product with ChangeNotifier {
   final String description;
   final double price;
   final String imageUrl;
-  final String category;
+  final String category; // Pastikan ini ada
   bool isFavorite;
 
   Product({
@@ -15,9 +16,29 @@ class Product with ChangeNotifier {
     required this.description,
     required this.price,
     required this.imageUrl,
-    required this.category,
+    required this.category, // Pastikan ini diinisialisasi
     this.isFavorite = false,
   });
+
+  Product copyWith({
+    String? id,
+    String? name,
+    String? description,
+    double? price,
+    String? imageUrl,
+    String? category,
+    bool? isFavorite,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      imageUrl: imageUrl ?? this.imageUrl,
+      category: category ?? this.category,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
+  }
 
   Map<String, dynamic> toFirestore() {
     return {
@@ -25,7 +46,7 @@ class Product with ChangeNotifier {
       'description': description,
       'price': price,
       'imageUrl': imageUrl,
-      'category': category,
+      'category': category, 
       'isFavorite': isFavorite,
     };
   }
@@ -37,7 +58,7 @@ class Product with ChangeNotifier {
       description: data['description'] ?? '',
       price: (data['price'] ?? 0.0).toDouble(),
       imageUrl: data['imageUrl'] ?? '',
-      category: data['category'] ?? 'Uncategorized',
+      category: data['category'] ?? 'Uncategorized', 
       isFavorite: data['isFavorite'] ?? false,
     );
   }
