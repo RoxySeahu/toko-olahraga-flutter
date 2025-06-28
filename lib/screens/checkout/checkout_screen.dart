@@ -14,13 +14,29 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _notesController = TextEditingController();
-  String? _selectedPaymentMethod;
+  String? _selectedPaymentMethodCategory; // Kategori: 'bank' atau 'mobile'
+  String? _selectedBank; // Pilihan bank spesifik
+  String? _selectedMobilePay; // Pilihan mobile pay spesifik
   bool _isProcessingOrder = false;
 
   void _placeOrder() async {
-    if (_selectedPaymentMethod == null) {
+    if (_selectedPaymentMethodCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap pilih metode pembayaran.')),
+        const SnackBar(content: Text('Harap pilih kategori metode pembayaran (Bank atau Mobile Payment).')),
+      );
+      return;
+    }
+
+    if (_selectedPaymentMethodCategory == 'bank' && _selectedBank == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih bank Anda.')),
+      );
+      return;
+    }
+
+    if (_selectedPaymentMethodCategory == 'mobile' && _selectedMobilePay == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih metode pembayaran mobile Anda.')),
       );
       return;
     }
@@ -29,11 +45,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _isProcessingOrder = true;
     });
 
-    // Simulasikan waktu pemrosesan pesanan
+    // Simulate order processing time
     await Future.delayed(const Duration(seconds: 2));
 
     final cart = Provider.of<CartProvider>(context, listen: false);
-    cart.clearCart();
+    final totalAmount = cart.totalAmount; // Simpan total sebelum keranjang dikosongkan
+    final orderNotes = _notesController.text; // Simpan catatan
+
+    // Detail metode pembayaran yang dipilih
+    String paymentDetail = '';
+    if (_selectedPaymentMethodCategory == 'bank') {
+      paymentDetail = 'Transfer Bank: ${_selectedBank!}'; // Perbaikan: Gunakan !
+    } else if (_selectedPaymentMethodCategory == 'mobile') {
+      paymentDetail = 'Mobile Payment: ${_selectedMobilePay!}'; // Perbaikan: Gunakan !
+    }
+
+    cart.clearCart(); // Kosongkan keranjang setelah pesanan diproses
 
     setState(() {
       _isProcessingOrder = false;
@@ -41,7 +68,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     showDialog(
       context: context,
-      barrierDismissible: false, // Pengguna harus mengetuk OK untuk menutup
+      barrierDismissible: false, // Pengguna harus tap OK untuk menutup
       builder: (ctx) => AlertDialog(
         title: const Text('Pesanan Berhasil Ditempatkan!'),
         content: Column(
@@ -50,12 +77,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             const Text('Terima kasih atas pesanan Anda.'),
             const SizedBox(height: 10),
-            Text('Total Pembayaran: Rp ${cart.totalAmount.toStringAsFixed(2)}'),
-            Text('Metode Pembayaran: ${_selectedPaymentMethod == 'bank' ? 'Transfer Bank' : 'Mobile Payment'}'),
-            if (_notesController.text.isNotEmpty)
-              Text('Catatan: ${_notesController.text}'),
+            Text('Total Pembayaran: Rp ${totalAmount.toStringAsFixed(2)}'),
+            Text('Metode Pembayaran: $paymentDetail'),
+            if (orderNotes.isNotEmpty)
+              Text('Catatan: $orderNotes'),
             const SizedBox(height: 10),
-            const Text('Detail pembayaran akan dikirimkan ke email Anda.'),
+            // Tampilkan info pembayaran spesifik (contoh)
+            if (_selectedPaymentMethodCategory == 'bank')
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Lakukan transfer ke rekening berikut:'),
+                  const SizedBox(height: 5),
+                  Text('Bank: ${_selectedBank!}'), // Perbaikan: Gunakan !
+                  const Text('Nomor Rekening: 1234567890 (a/n Toko Olahraga)'),
+                ],
+              )
+            else if (_selectedPaymentMethodCategory == 'mobile')
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Lakukan pembayaran melalui aplikasi ${_selectedMobilePay!}.'), // Perbaikan: Gunakan !
+                  const SizedBox(height: 5),
+                  const Text('ID/Nomor Telepon: 081234567890 (a/n Toko Olahraga)'),
+                  const Text('Atau scan QR Code berikut (simulasi):'),
+                  const SizedBox(height: 10),
+                  // Anda bisa menampilkan gambar QR code di sini
+                  Container(
+                    width: 150,
+                    height: 150,
+                    color: Colors.grey.shade200,
+                    child: const Center(child: Text('QR Code Simulasi')),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 10),
+            const Text('Detail pembayaran dan konfirmasi akan dikirimkan ke email Anda.'),
           ],
         ),
         actions: [
@@ -64,7 +121,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Navigator.of(ctx).pop(); // Tutup dialog
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (route) => false, // Hapus semua rute dan pergi ke Home
+                (route) => false, // Clear all routes and go to Home
               );
             },
             child: const Text('OK'),
@@ -193,33 +250,94 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Pilih Metode Pembayaran',
+                            'Pilih Kategori Pembayaran',
                             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 10),
                           RadioListTile<String>(
                             title: const Text('Transfer Bank', style: TextStyle(fontSize: 16)),
-                            subtitle: const Text('Pembayaran melalui bank transfer (BCA, Mandiri, dll.)'),
+                            subtitle: const Text('Pembayaran melalui rekening bank'),
                             value: 'bank',
-                            groupValue: _selectedPaymentMethod,
+                            groupValue: _selectedPaymentMethodCategory,
                             onChanged: (value) {
                               setState(() {
-                                _selectedPaymentMethod = value;
+                                _selectedPaymentMethodCategory = value;
+                                _selectedMobilePay = null; // Reset mobile pay
                               });
                             },
                           ),
+                          if (_selectedPaymentMethodCategory == 'bank')
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16.0, right: 8.0, bottom: 8.0),
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedBank,
+                                hint: const Text('Pilih Bank'),
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                                ),
+                                items: <String>['Bank BRI', 'Bank BNI', 'Bank Mandiri', 'Bank BCA', 'Bank Lainnya']
+                                    .map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedBank = newValue;
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null) {
+                                    return 'Harap pilih bank.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
                           const Divider(),
                           RadioListTile<String>(
-                            title: const Text('Mobile Payment (Dana, GoPay, OVO, LinkAja)', style: TextStyle(fontSize: 16)),
+                            title: const Text('Mobile Payment', style: TextStyle(fontSize: 16)),
                             subtitle: const Text('Pembayaran melalui aplikasi dompet digital'),
                             value: 'mobile',
-                            groupValue: _selectedPaymentMethod,
+                            groupValue: _selectedPaymentMethodCategory,
                             onChanged: (value) {
                               setState(() {
-                                _selectedPaymentMethod = value;
+                                _selectedPaymentMethodCategory = value;
+                                _selectedBank = null; // Reset bank
                               });
                             },
                           ),
+                          if (_selectedPaymentMethodCategory == 'mobile')
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16.0, right: 8.0, bottom: 8.0),
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedMobilePay,
+                                hint: const Text('Pilih Mobile Payment'),
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                                ),
+                                items: <String>['Dana', 'GoPay', 'OVO', 'LinkAja', 'ShopeePay', 'Lainnya']
+                                    .map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedMobilePay = newValue;
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null) {
+                                    return 'Harap pilih mobile payment.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
                         ],
                       ),
                     ),
