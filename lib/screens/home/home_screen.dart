@@ -22,6 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
   var _isInit = true;
   var _isLoadingData = false;
 
+  final ScrollController _categoryScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal memuat produk: $error')),
         );
+        debugPrint('Error fetching products: $error');
       });
     }
     _isInit = false;
@@ -72,6 +75,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _categoryScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final productsData = Provider.of<ProductsProvider>(context);
 
@@ -81,7 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ? productsData.favoriteProducts
             : productsData.products;
 
-    // >>> PENTING: Ambil kategori dari provider <<<
     final List<String> categories = productsData.categories;
 
     return Scaffold(
@@ -162,8 +170,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             SizedBox(height: 10),
                             Text(
                               'Tidak ada produk yang tersedia saat ini.\nTarik ke bawah untuk memuat ulang atau tambahkan produk baru di database.',
-                              style: TextStyle(fontSize: 18, color: Colors.grey),
                               textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 18, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -175,7 +183,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // --- Bagian Kategori ---
-                          // Tampilkan kategori hanya jika ada dan tidak sedang mencari
                           if (!_isSearching && categories.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.all(16.0),
@@ -187,37 +194,46 @@ class _HomeScreenState extends State<HomeScreen> {
                                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 10),
-                                  SizedBox(
-                                    height: 50,
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: categories.length,
-                                      itemBuilder: (ctx, i) {
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                                          child: ActionChip(
-                                            label: Text(categories[i]),
-                                            onPressed: () {
-                                              // >>> PENTING: Navigasi ke CategoryProductsScreen dengan categoryName <<<
-                                              Navigator.of(context).pushNamed(
-                                                CategoryProductsScreen.routeName,
-                                                arguments: {
-                                                  'categoryName': categories[i],
-                                                  'categoryTitle': categories[i],
-                                                },
-                                              );
-                                            },
-                                            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20.0),
-                                              side: BorderSide(color: Theme.of(context).primaryColor),
+                                  Scrollbar(
+                                    controller: _categoryScrollController,
+                                    thumbVisibility: true,
+                                    trackVisibility: true,
+                                    thickness: 8.0,
+                                    radius: const Radius.circular(10),
+                                    child: SizedBox(
+                                      height: 80, // <<< PERBAIKAN: Naikkan tinggi SizedBox untuk memberi ruang
+                                      child: ListView.builder(
+                                        controller: _categoryScrollController,
+                                        scrollDirection: Axis.horizontal,
+                                        padding: const EdgeInsets.only(bottom: 5.0), // Jarak untuk scrollbar
+                                        itemCount: categories.length,
+                                        itemBuilder: (ctx, i) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                            child: ActionChip(
+                                              label: Text(categories[i]),
+                                              onPressed: () {
+                                                Navigator.of(context).pushNamed(
+                                                  CategoryProductsScreen.routeName,
+                                                  arguments: {
+                                                    'categoryName': categories[i],
+                                                    'categoryTitle': categories[i],
+                                                  },
+                                                );
+                                              },
+                                              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(20.0),
+                                                side: BorderSide(color: Theme.of(context).primaryColor),
+                                              ),
+                                              labelPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                                             ),
-                                            labelPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                                          ),
-                                        );
-                                      },
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
+                                  // const SizedBox(height: 16), // SizedBox ini bisa dipertahankan atau disesuaikan
                                 ],
                               ),
                             ),
