@@ -5,7 +5,7 @@ import '../models/product.dart';
 class ProductsProvider with ChangeNotifier {
   List<Product> _products = [];
   List<String> _categories = [];
-  bool _isLoading = false;
+  bool _isLoading = false; // Status loading global (tidak selalu digunakan jika dihandle per layar)
 
   List<Product> get products {
     return [..._products];
@@ -19,7 +19,7 @@ class ProductsProvider with ChangeNotifier {
     return [..._categories];
   }
 
-  bool get isLoading => _isLoading;
+  bool get isLoading => _isLoading; // Getter untuk status loading
 
   Product findById(String id) {
     try {
@@ -35,6 +35,9 @@ class ProductsProvider with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
+    // _isLoading = true; // Jika Anda ingin ini menjadi status loading global
+    // notifyListeners();
+
     try {
       final querySnapshot = await FirebaseFirestore.instance.collection('products').get();
       final List<Product> loadedProducts = [];
@@ -49,7 +52,7 @@ class ProductsProvider with ChangeNotifier {
           final product = Product.fromFirestore(doc.data(), doc.id);
           loadedProducts.add(product);
           uniqueCategories.add(product.category);
-          debugPrint('ProductProvider: Dimuat: ${doc.id} - ${doc.data()['name']} - Kategori: ${doc.data()['category']}');
+          // debugPrint('ProductProvider: Dimuat: ${doc.id} - ${doc.data()['name']} - Kategori: ${doc.data()['category']}');
         } catch (e) {
           debugPrint('ProductProvider: Error parsing product ${doc.id}: $e - Data: ${doc.data()}');
         }
@@ -64,24 +67,20 @@ class ProductsProvider with ChangeNotifier {
       debugPrint('ProductProvider: Error fetching products from Firestore: $error');
       rethrow;
     } finally {
-      notifyListeners();
+      // _isLoading = false; // Jika Anda ingin ini menjadi status loading global
+      notifyListeners(); // Penting untuk memberi tahu Consumer agar UI diperbarui
     }
   }
 
+  // Metode untuk menambahkan produk (digunakan oleh AdminService, bukan ProductProvider langsung)
+  // Biarkan kosong atau hapus jika AdminService yang menanganinya sepenuhnya
+  /*
   Future<void> addProduct(Product product) async {
-    try {
-      final docRef = await FirebaseFirestore.instance.collection('products').add(product.toFirestore());
-      final newProduct = product.copyWith(id: docRef.id);
-      _products.add(newProduct);
-      notifyListeners();
-      debugPrint('ProductProvider: Produk ${newProduct.name} berhasil ditambahkan dengan ID: ${newProduct.id}.');
-    } catch (error) {
-      debugPrint('ProductProvider: Gagal menambahkan produk: $error');
-      rethrow;
-    }
+    // Implementasi ini seharusnya sudah di AdminService.
+    // Jika Anda punya versi ini di sini, bisa dihapus atau diadaptasi.
   }
+  */
 
-  // >>> PASTIKAN METODE INI ADA DAN BENAR <<<
   Future<void> deleteProduct(String id) async {
     final existingProductIndex = _products.indexWhere((prod) => prod.id == id);
     if (existingProductIndex < 0) {
@@ -98,14 +97,12 @@ class ProductsProvider with ChangeNotifier {
       await FirebaseFirestore.instance.collection('products').doc(id).delete();
       debugPrint('ProductProvider: Produk dengan ID $id berhasil dihapus dari Firestore.');
     } catch (error) {
-      // Rollback jika gagal
       _products.insert(existingProductIndex, existingProduct);
       notifyListeners();
       debugPrint('ProductProvider: Gagal menghapus produk dengan ID $id dari Firestore: $error');
       rethrow;
     }
   }
-  // >>> AKHIR METODE DELETEPRODUCT <<<
 
   Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _products.indexWhere((prod) => prod.id == id);

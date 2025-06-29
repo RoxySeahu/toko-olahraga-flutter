@@ -1,5 +1,8 @@
 // lib/models/product.dart
+// ignore_for_file: unused_import
+
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Product with ChangeNotifier {
   final String id;
@@ -7,8 +10,9 @@ class Product with ChangeNotifier {
   final String description;
   final double price;
   final String imageUrl;
-  final String category; // Pastikan ini ada
+  final String category;
   bool isFavorite;
+  final String? userId; // Ditambahkan untuk melacak user/admin yang menambahkan produk
 
   Product({
     required this.id,
@@ -16,9 +20,35 @@ class Product with ChangeNotifier {
     required this.description,
     required this.price,
     required this.imageUrl,
-    required this.category, // Pastikan ini diinisialisasi
+    required this.category,
     this.isFavorite = false,
+    this.userId, // Ditambahkan ke konstruktor
   });
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'description': description,
+      'price': price,
+      'imageUrl': imageUrl,
+      'category': category,
+      'isFavorite': isFavorite,
+      'userId': userId, // Disimpan ke Firestore
+    };
+  }
+
+  factory Product.fromFirestore(Map<String, dynamic> data, String id) {
+    return Product(
+      id: id,
+      name: data['name'] as String? ?? 'N/A',
+      description: data['description'] as String? ?? 'Tidak ada deskripsi.',
+      price: (data['price'] as num?)?.toDouble() ?? 0.0,
+      imageUrl: data['imageUrl'] as String? ?? '',
+      category: data['category'] as String? ?? 'Uncategorized',
+      isFavorite: data['isFavorite'] as bool? ?? false,
+      userId: data['userId'] as String?, // Diambil dari Firestore
+    );
+  }
 
   Product copyWith({
     String? id,
@@ -28,6 +58,7 @@ class Product with ChangeNotifier {
     String? imageUrl,
     String? category,
     bool? isFavorite,
+    String? userId,
   }) {
     return Product(
       id: id ?? this.id,
@@ -37,29 +68,7 @@ class Product with ChangeNotifier {
       imageUrl: imageUrl ?? this.imageUrl,
       category: category ?? this.category,
       isFavorite: isFavorite ?? this.isFavorite,
-    );
-  }
-
-  Map<String, dynamic> toFirestore() {
-    return {
-      'name': name,
-      'description': description,
-      'price': price,
-      'imageUrl': imageUrl,
-      'category': category, 
-      'isFavorite': isFavorite,
-    };
-  }
-
-  factory Product.fromFirestore(Map<String, dynamic> data, String id) {
-    return Product(
-      id: id,
-      name: data['name'] ?? '',
-      description: data['description'] ?? '',
-      price: (data['price'] ?? 0.0).toDouble(),
-      imageUrl: data['imageUrl'] ?? '',
-      category: data['category'] ?? 'Uncategorized', 
-      isFavorite: data['isFavorite'] ?? false,
+      userId: userId ?? this.userId,
     );
   }
 

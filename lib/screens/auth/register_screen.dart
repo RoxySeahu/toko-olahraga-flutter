@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -11,58 +9,73 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  void _register() async {
-    if (_formKey.currentState!.validate()) {
-      if (_passwordController.text != _confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kata sandi dan konfirmasi kata sandi tidak cocok!')),
-        );
-        return;
-      }
-
-      try {
-        await _auth.createUserWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registrasi berhasil! Silakan login.')),
-        );
-        Navigator.pop(context);
-      } on FirebaseAuthException catch (e) {
-        String message;
-        if (e.code == 'weak-password') {
-          message = 'Kata sandi terlalu lemah.';
-        } else if (e.code == 'email-already-in-use') {
-          message = 'Akun sudah ada untuk email tersebut.';
-        } else {
-          message = 'Terjadi kesalahan: ${e.message}';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Terjadi kesalahan yang tidak diketahui: $e')),
-        );
-      }
+  void _submit() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
+    _formKey.currentState!.save();
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password tidak cocok!')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pendaftaran berhasil! Silakan login.')),
+      );
+      Navigator.of(context).pop(); // Kembali ke layar login
+    } on FirebaseAuthException catch (e) {
+      String message;
+      if (e.code == 'weak-password') {
+        message = 'Password terlalu lemah.';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'Email sudah terdaftar.';
+      } else {
+        message = 'Kesalahan pendaftaran. Silakan coba lagi.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan tak terduga.')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daftar Akun Baru'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Daftar Akun')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -70,90 +83,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
             key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Image.asset(
-                  'assets/images/sports_logo.png', // Logo masih dari assets
-                  height: 150,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 30.0),
                 TextFormField(
                   controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email tidak boleh kosong';
+                    if (value == null || value.isEmpty || !value.contains('@')) {
+                      return 'Harap masukkan email yang valid.';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16.0),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Kata Sandi',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Kata sandi tidak boleh kosong';
-                    }
-                    if (value.length < 6) {
-                      return 'Kata sandi minimal 6 karakter';
+                    if (value == null || value.isEmpty || value.length < 6) {
+                      return 'Password minimal 6 karakter.';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16.0),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _confirmPasswordController,
+                  decoration: const InputDecoration(labelText: 'Konfirmasi Password'),
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Konfirmasi Kata Sandi',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Konfirmasi kata sandi tidak boleh kosong';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Kata sandi tidak cocok';
+                      return 'Harap konfirmasi password.';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 24.0),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _register,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(height: 20),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: _submit,
+                        child: const Text('Daftar'),
                       ),
-                    ),
-                    child: const Text(
-                      'Daftar',
-                      style: TextStyle(fontSize: 18.0),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.of(context).pop();
                   },
-                  child: const Text('Sudah punya akun? Masuk di sini.'),
+                  child: const Text('Sudah punya akun? Login sekarang'),
                 ),
               ],
             ),

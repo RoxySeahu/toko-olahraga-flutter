@@ -1,9 +1,7 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:toko_olahraga/firebase_options.dart';
-
+import 'package:toko_olahraga/firebase_options.dart'; 
 import 'package:toko_olahraga/providers/product_provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
 import 'package:toko_olahraga/screens/home/home_screen.dart';
@@ -73,7 +71,7 @@ class MyApp extends StatelessWidget {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Color.fromARGB(255, 101, 175, 171)),
+              borderSide: const BorderSide(color: Color.fromARGB(255, 111, 128, 141)),
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
             labelStyle: TextStyle(color: Colors.grey.shade700),
@@ -91,21 +89,25 @@ class MyApp extends StatelessWidget {
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (ctx, userSnapshot) {
             if (userSnapshot.connectionState == ConnectionState.waiting) {
+              print('DEBUG: Auth state di main.dart: Menunggu...');
               return const Center(child: CircularProgressIndicator());
             }
             if (userSnapshot.hasData) {
+              print('DEBUG: Auth state di main.dart: Pengguna login: ${userSnapshot.data!.uid}');
               return const HomeScreen();
             }
+            print('DEBUG: Auth state di main.dart: Tidak ada pengguna login. Mengarahkan ke LoginScreen.');
             return const LoginScreen();
           },
         ),
         routes: {
           ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
-          // Menggunakan CartScreen.routeName yang sudah didefinisikan
-          CartScreen.routeName: (ctx) => const CartScreen(), // Dapat menjadi const kembali jika tidak ada isu internal
+          CartScreen.routeName: (ctx) => CartScreen(),
 
+          // Pastikan rute ini benar. Jika LoginScreen Anda menggunakan '/login', ubah ini.
           '/register': (ctx) => const RegisterScreen(),
-          '/home': (ctx) => const HomeScreen(),
+          '/login': (ctx) => const LoginScreen(), // Tambahkan ini jika Anda punya LoginScreen terpisah
+          '/home': (ctx) => const HomeScreen(), // Ini adalah rute eksplisit ke HomeScreen
           CheckoutScreen.routeName: (ctx) => const CheckoutScreen(),
 
           CategoryProductsScreen.routeName: (ctx) {

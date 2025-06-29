@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:io'; // For File
-import 'package:toko_olahraga/services/admin_service.dart'; // Import AdminService
+import 'package:toko_olahraga/services/admin_service.dart';
+import 'package:provider/provider.dart';
+import 'package:toko_olahraga/providers/product_provider.dart';
 
 class AddProductScreen extends StatefulWidget {
   static const routeName = '/add-product';
@@ -16,26 +17,59 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
+  final _imageUrlController = TextEditingController(); // <<< Gunakan ini untuk URL gambar
   final _categoryController = TextEditingController(); // Untuk kategori
-  File? _selectedImage;
+  
+  // File? _selectedImage; // <<< HAPUS INI
   bool _isLoading = false;
+  
+  String? _selectedCategory; // Untuk menyimpan kategori yang dipilih dari dropdown
 
   final AdminService _adminService = AdminService();
 
-  Future<void> _pickImage() async {
-    final pickedFile = await _adminService.pickImage();
-    setState(() {
-      _selectedImage = pickedFile;
-    });
+  // >>> HAPUS METODE INI <<<
+  // Future<void> _pickImage() async {
+  //   final pickedFile = await _adminService.pickImage();
+  //   setState(() {
+  //     _selectedImage = pickedFile;
+  //   });
+  // }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _imageUrlController.dispose(); // <<< Dispose controller ini
+    _categoryController.dispose();
+    super.dispose();
   }
 
   void _saveProduct() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    if (_selectedImage == null) {
+    // Validasi URL gambar
+    if (_imageUrlController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap pilih gambar produk.')),
+        const SnackBar(content: Text('Harap masukkan URL gambar produk.')),
+      );
+      return;
+    }
+    if ((!_imageUrlController.text.startsWith('http') &&
+            !_imageUrlController.text.startsWith('https')) ||
+        (!_imageUrlController.text.endsWith('.png') &&
+            !_imageUrlController.text.endsWith('.jpg') &&
+            !_imageUrlController.text.endsWith('.jpeg'))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap masukkan URL gambar yang valid (.png, .jpg, .jpeg).')),
+      );
+      return;
+    }
+
+    if (_selectedCategory == null || _selectedCategory!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih kategori produk.')),
       );
       return;
     }
@@ -49,9 +83,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
         name: _nameController.text,
         description: _descriptionController.text,
         price: double.parse(_priceController.text),
-        imageFile: _selectedImage,
-        category: _categoryController.text,
+        imageUrl: _imageUrlController.text, // <<< Gunakan URL dari controller
+        category: _selectedCategory!,
       );
+
+      // Setelah berhasil menambahkan, minta ProductsProvider untuk memuat ulang data
+      await Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Produk berhasil ditambahkan!')),
       );
@@ -60,6 +98,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal menambahkan produk: $error')),
       );
+      debugPrint('Error saving product in AddProductScreen: $error');
     } finally {
       setState(() {
         _isLoading = false;
@@ -68,19 +107,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _categoryController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tambah Produk Baru'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveProduct,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -131,45 +167,86 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         return null;
                       },
                     ),
-                    TextFormField(
-                      controller: _categoryController,
+                    // Dropdown untuk Kategori
+                    DropdownButtonFormField<String>(
                       decoration: const InputDecoration(labelText: 'Kategori'),
+                      value: _selectedCategory,
+                      hint: const Text('Pilih Kategori'),
+                      items: <String>[
+                        'PeralatanGym',
+                        'Renang',
+                        'Sepatu',
+                        'Aksesoris',
+                        'Bola',
+                        'Raket',
+                        'Alat Pelindung',
+                        'Supplement',
+                        'Obat',
+                        'Buku',
+                        'Lainnya',
+                      ].map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedCategory = newValue;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Harap pilih kategori.';
+                        }
+                        return null;
+                      },
+                    ),
+                    // >>> GANTI BAGIAN PEMILIHAN GAMBAR DENGAN TEXTFORMFIELD UNTUK URL GAMBAR <<<
+                    TextFormField(
+                      controller: _imageUrlController,
+                      decoration: const InputDecoration(labelText: 'URL Gambar Produk'),
+                      keyboardType: TextInputType.url,
                       textInputAction: TextInputAction.done,
                       validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Harap masukkan kategori produk.';
+                        if (value == null || value.isEmpty) {
+                          return 'Harap masukkan URL gambar produk.';
+                        }
+                        if (!value.startsWith('http') && !value.startsWith('https')) {
+                          return 'Harap masukkan URL yang valid (dimulai dengan http/https).';
+                        }
+                        if (!value.endsWith('.png') && !value.endsWith('.jpg') && !value.endsWith('.jpeg')) {
+                          return 'Harap masukkan URL gambar yang valid (.png, .jpg, .jpeg).';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            border: Border.all(width: 1, color: Colors.grey),
-                          ),
-                          alignment: Alignment.center,
-                          child: _selectedImage != null
-                              ? Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                )
-                              : const Text('Tidak ada gambar'),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextButton.icon(
-                            icon: const Icon(Icons.image),
-                            label: const Text('Pilih Gambar'),
-                            onPressed: _pickImage,
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Tampilkan pratinjau gambar dari URL
+                    _imageUrlController.text.isNotEmpty
+                        ? Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              border: Border.all(width: 1, color: Colors.grey),
+                            ),
+                            child: Image.network(
+                              _imageUrlController.text,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                  child: Text(
+                                    'Gagal memuat gambar',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : const SizedBox.shrink(), // Sembunyikan jika URL kosong
+                    // >>> AKHIR PERBAIKAN BAGIAN GAMBAR <<<
+
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _saveProduct,

@@ -5,25 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/product_provider.dart';
 import 'package:toko_olahraga/screens/admin/add_product_screen.dart';
+// ignore: unused_import
+import 'package:toko_olahraga/screens/home/home_screen.dart'; 
 
 class ProductsManagementScreen extends StatefulWidget {
   static const routeName = '/products-management';
 
-  const ProductsManagementScreen({Key? key}) : super(key: key);
+  const ProductsManagementScreen({super.key});
 
   @override
   State<ProductsManagementScreen> createState() => _ProductsManagementScreenState();
 }
 
 class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
-  var _isInit = true; // Flag untuk pemuatan data pertama kali
-  var _isLoadingData = false; // Status loading untuk layar ini
+  var _isInit = true;
+  var _isLoadingData = false;
 
   @override
   void didChangeDependencies() {
     if (_isInit) {
       setState(() {
-        _isLoadingData = true; // Memulai loading
+        _isLoadingData = true;
       });
       Provider.of<ProductsProvider>(context, listen: false)
           .fetchAndSetProducts()
@@ -51,12 +53,21 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Consumer digunakan agar UI bereaksi terhadap perubahan pada ProductsProvider
     final productsData = Provider.of<ProductsProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kelola Produk'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // >>> PERUBAHAN DI SINI: Selalu arahkan ke HomeScreen secara eksplisit <<<
+            // CATATAN PENTING: Ini mengabaikan status autentikasi di main.dart
+            // sehingga jika pengguna logout saat di layar ini, mereka akan dibawa ke HomeScreen
+            // yang mungkin kurang aman. Pastikan rute '/home' Anda selalu mengarah ke HomeScreen.
+            Navigator.of(context).pushReplacementNamed('/home');
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -66,9 +77,9 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
           ),
         ],
       ),
-      body: _isLoadingData // Tampilkan CircularProgressIndicator saat loading data
+      body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator( // Menambahkan fitur pull-to-refresh
+          : RefreshIndicator(
               onRefresh: () => _refreshProducts(context),
               child: productsData.products.isEmpty
                   ? const Center(
@@ -89,7 +100,7 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
                       ),
                     )
                   : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(), // Agar RefreshIndicator berfungsi
+                      physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: productsData.products.length,
                       itemBuilder: (_, i) => Column(
                         children: [
@@ -108,7 +119,6 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
                                   IconButton(
                                     icon: const Icon(Icons.delete),
                                     onPressed: () async {
-                                      // Konfirmasi penghapusan
                                       final bool? confirm = await showDialog<bool>(
                                         context: context,
                                         builder: (ctx) => AlertDialog(
@@ -129,7 +139,6 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
 
                                       if (confirm == true) {
                                         try {
-                                          // BARIS YANG DIMAKSUD
                                           await productsData.deleteProduct(productsData.products[i].id);
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(content: Text('Produk berhasil dihapus!')),
@@ -138,7 +147,6 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(content: Text('Gagal menghapus produk: $error')),
                                           );
-                                          // Log error lebih detail ke konsol
                                           debugPrint('Error from deleteProduct call in ProductsManagementScreen: $error');
                                         }
                                       }

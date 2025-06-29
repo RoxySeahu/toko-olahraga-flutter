@@ -1,9 +1,14 @@
+// lib/screens/cart/cart_screen.dart
+// ignore_for_file: unused_import
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
+import 'package:toko_olahraga/models/cart_item.dart';
+import 'package:toko_olahraga/models/product.dart';
 import 'package:toko_olahraga/screens/checkout/checkout_screen.dart';
 import 'package:toko_olahraga/widgets/cart_item_widget.dart';
-import 'package:intl/intl.dart'; // Import intl
+import 'package:intl/intl.dart';
 
 class CartScreen extends StatelessWidget {
   static const routeName = '/cart';
@@ -13,7 +18,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2); // Formatter
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2);
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +41,6 @@ class CartScreen extends StatelessWidget {
                   const Spacer(),
                   Chip(
                     label: Text(
-                      // Format totalAmount
                       currencyFormatter.format(cart.totalAmount),
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
@@ -135,10 +139,9 @@ class CartScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        // Gunakan CartItemWidget, yang juga akan diperbarui
                         child: CartItemWidget(
                           cartItem: cartItem,
-                          currencyFormatter: currencyFormatter, // Teruskan formatter
+                          currencyFormatter: currencyFormatter,
                         ),
                       );
                     },
