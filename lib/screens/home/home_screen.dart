@@ -8,7 +8,7 @@ import 'package:toko_olahraga/screens/category/category_products_screen.dart';
 import 'package:toko_olahraga/models/product.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,6 +23,22 @@ class _HomeScreenState extends State<HomeScreen> {
   var _isLoadingData = false;
 
   final ScrollController _categoryScrollController = ScrollController();
+
+  // --- START: ICON MAPPING FOR CATEGORIES ---
+  final Map<String, IconData> _categoryIcons = {
+    'PeralatanGym': Icons.fitness_center,
+    'Renang': Icons.pool,
+    'Sepatu': Icons.directions_run,
+    'Aksesoris': Icons.watch, // Example, adjust as needed
+    'Bola': Icons.sports_baseball, // Or Icons.sports_soccer, Icons.sports_basketball
+    'Raket': Icons.sports_tennis, // Or Icons.sports_badminton
+    'Alat Pelindung': Icons.safety_divider, // Or Icons.sports_handball
+    'Supplement': Icons.medical_services, // Or Icons.food_bank for nutrition
+    'Obat': Icons.medical_information,
+    'Buku': Icons.book,
+    'Lainnya': Icons.category, // Default/fallback icon
+  };
+  // --- END: ICON MAPPING FOR CATEGORIES ---
 
   @override
   void initState() {
@@ -46,7 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
           _isLoadingData = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat produk: $error')),
+          SnackBar(
+            content: Text('Gagal memuat produk: $error'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
         debugPrint('Error fetching products: $error');
       });
@@ -71,12 +90,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refreshProducts(BuildContext context) async {
-    await Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
+    setState(() {
+      _isLoadingData = true; // Show loading indicator on refresh
+    });
+    try {
+      await Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat ulang produk: $error'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoadingData = false;
+      });
+    }
   }
 
   @override
   void dispose() {
     _categoryScrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -93,22 +129,34 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<String> categories = productsData.categories;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Lighter background for a clean look
       appBar: AppBar(
+        backgroundColor: Colors.blueAccent, // A more prominent app bar color
+        foregroundColor: Colors.white, // White icons and text
+        elevation: 4, // Subtle shadow for AppBar
         title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Cari produk...',
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  border: InputBorder.none,
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
-                  prefixIcon: const Icon(Icons.search, color: Colors.white),
+            ? Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2), // Slightly transparent background for search field
+                  borderRadius: BorderRadius.circular(25.0), // Rounded search bar
                 ),
-                style: const TextStyle(color: Colors.white),
-                onChanged: _filterProducts,
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Cari produk...',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0), // Adjust padding
+                    prefixIcon: const Icon(Icons.search, color: Colors.white),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: _filterProducts,
+                ),
               )
-            : const Text('Toko Olahraga'),
+            : const Text(
+                'Toko Olahraga',
+                style: TextStyle(fontWeight: FontWeight.bold), // Bold title
+              ),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -128,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _showFavoritesOnly = selectedValue;
               });
             },
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(Icons.filter_list), // More descriptive icon for filter
             itemBuilder: (_) => [
               const PopupMenuItem(
                 value: true,
@@ -143,6 +191,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Consumer<CartProvider>(
             builder: (_, cart, ch) => Badge(
               label: Text(cart.itemCount.toString()),
+              backgroundColor: Colors.redAccent, // Red badge for cart count
+              textColor: Colors.white,
               child: ch!,
             ),
             child: IconButton(
@@ -152,26 +202,48 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
+          const SizedBox(width: 8), // Spacing for end of app bar
         ],
       ),
       drawer: const AppDrawer(),
       body: _isLoadingData
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
           : RefreshIndicator(
               onRefresh: () => _refreshProducts(context),
+              color: Colors.blueAccent, // Refresh indicator color
               child: productsToDisplay.isEmpty && _searchController.text.isEmpty && !_showFavoritesOnly
-                  ? const Center(
+                  ? Center(
                       child: SingleChildScrollView(
-                        physics: AlwaysScrollableScrollPhysics(),
+                        physics: const AlwaysScrollableScrollPhysics(), // Allow scrolling even if empty
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.info_outline, size: 80, color: Colors.grey),
-                            SizedBox(height: 10),
-                            Text(
-                              'Tidak ada produk yang tersedia saat ini.\nTarik ke bawah untuk memuat ulang atau tambahkan produk baru di database.',
+                            Icon(Icons.sentiment_dissatisfied, size: 100, color: Colors.blueGrey[200]), // More expressive icon
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Oops! Tidak ada produk yang tersedia saat ini.',
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 18, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Tarik ke bawah untuk memuat ulang, atau cek kategori lain.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 30),
+                            ElevatedButton.icon(
+                              onPressed: () => _refreshProducts(context),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Muat Ulang Produk'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              ),
                             ),
                           ],
                         ),
@@ -182,94 +254,119 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- Bagian Kategori ---
+                          // --- Bagian Kategori (Section Header & Horizontal List) ---
                           if (!_isSearching && categories.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 10.0), // More top padding
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Kategori',
-                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Jelajahi Kategori', // More engaging title
+                                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                                      ),
+                                      // Optional: "Lihat Semua" button for categories
+                                      // TextButton(
+                                      //   onPressed: () {
+                                      //     // Navigate to a screen showing all categories
+                                      //   },
+                                      //   child: const Text('Lihat Semua', style: TextStyle(color: Colors.blueAccent)),
+                                      // ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 10),
-                                  Scrollbar(
-                                    controller: _categoryScrollController,
-                                    thumbVisibility: true,
-                                    trackVisibility: true,
-                                    thickness: 8.0,
-                                    radius: const Radius.circular(10),
-                                    child: SizedBox(
-                                      height: 80, // <<< PERBAIKAN: Naikkan tinggi SizedBox untuk memberi ruang
+                                  const SizedBox(height: 15), // Increased spacing
+                                  SizedBox(
+                                    height: 100, // Sufficient height for chips and scrollbar
+                                    child: Scrollbar(
+                                      controller: _categoryScrollController,
+                                      thumbVisibility: true,
+                                      trackVisibility: true,
+                                      thickness: 6.0, // Thinner scrollbar
+                                      radius: const Radius.circular(3),
                                       child: ListView.builder(
                                         controller: _categoryScrollController,
                                         scrollDirection: Axis.horizontal,
-                                        padding: const EdgeInsets.only(bottom: 5.0), // Jarak untuk scrollbar
+                                        padding: const EdgeInsets.only(bottom: 10.0), // Space for scrollbar
                                         itemCount: categories.length,
                                         itemBuilder: (ctx, i) {
+                                          final categoryName = categories[i];
+                                          // Get icon from map, fallback to default if not found
+                                          final iconData = _categoryIcons[categoryName] ?? Icons.category;
+
                                           return Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                            padding: const EdgeInsets.symmetric(horizontal: 6.0), // Closer chips
                                             child: ActionChip(
-                                              label: Text(categories[i]),
+                                              label: Text(
+                                                categoryName,
+                                                style: const TextStyle(color: Colors.blueGrey),
+                                              ),
+                                              avatar: Icon(iconData, color: Colors.blueAccent.withOpacity(0.7)),
                                               onPressed: () {
                                                 Navigator.of(context).pushNamed(
                                                   CategoryProductsScreen.routeName,
                                                   arguments: {
-                                                    'categoryName': categories[i],
-                                                    'categoryTitle': categories[i],
+                                                    'categoryName': categoryName,
+                                                    'categoryTitle': categoryName,
                                                   },
                                                 );
                                               },
-                                              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                              backgroundColor: Colors.blueAccent.withOpacity(0.08), // Lighter background
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(20.0),
-                                                side: BorderSide(color: Theme.of(context).primaryColor),
+                                                borderRadius: BorderRadius.circular(30.0), // More rounded chips
+                                                side: BorderSide(color: Colors.blueAccent.withOpacity(0.3)), // Subtle border
                                               ),
-                                              labelPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0), // Adjusted padding
                                             ),
                                           );
                                         },
                                       ),
                                     ),
                                   ),
-                                  // const SizedBox(height: 16), // SizedBox ini bisa dipertahankan atau disesuaikan
                                 ],
                               ),
                             ),
-                          if (!_isSearching && categories.isNotEmpty) const Divider(),
+                          if (!_isSearching && categories.isNotEmpty) const Divider(height: 1, thickness: 0.5, indent: 16, endIndent: 16), // Thin divider
 
-                          // --- Bagian Produk ---
+                          // --- Bagian Produk (Section Header & Grid) ---
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                            padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 10.0), // Top padding for product section
                             child: Text(
                               _isSearching
-                                  ? 'Hasil Pencarian'
-                                  : (_showFavoritesOnly ? 'Produk Favorit Anda' : 'Semua Produk'),
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ? 'Hasil Pencarian Produk'
+                                  : (_showFavoritesOnly ? 'Produk Favorit Pilihan Anda' : 'Produk Terbaru Kami'), // More engaging titles
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueGrey),
                             ),
                           ),
                           _isSearching && _filteredProducts.isEmpty && _searchController.text.isNotEmpty
-                              ? const Center(
+                              ? Center(
                                   child: Padding(
-                                    padding: EdgeInsets.all(20.0),
-                                    child: Text(
-                                      'Tidak ada produk yang cocok dengan pencarian Anda.',
-                                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                                      textAlign: TextAlign.center,
+                                    padding: const EdgeInsets.all(30.0),
+                                    child: Column(
+                                      children: [
+                                        Icon(Icons.search_off, size: 80, color: Colors.blueGrey[200]),
+                                        const SizedBox(height: 15),
+                                        const Text(
+                                          'Tidak ada produk yang cocok dengan pencarian Anda.',
+                                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 )
                               : GridView.builder(
-                                  padding: const EdgeInsets.all(10.0),
+                                  padding: const EdgeInsets.all(12.0), // Adjusted padding for grid
                                   itemCount: productsToDisplay.length,
                                   shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
+                                  physics: const NeverScrollableScrollPhysics(), // Important for nested scrolling
                                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
-                                    childAspectRatio: 3 / 2,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
+                                    childAspectRatio: 0.75, // Adjust aspect ratio for better product item display
+                                    crossAxisSpacing: 12, // Increased spacing
+                                    mainAxisSpacing: 12, // Increased spacing
                                   ),
                                   itemBuilder: (ctx, i) => ChangeNotifierProvider.value(
                                     value: productsToDisplay[i],
