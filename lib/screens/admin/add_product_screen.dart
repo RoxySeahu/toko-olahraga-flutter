@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:toko_olahraga/services/admin_service.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/product_provider.dart';
+import 'package:toko_olahraga/models/product.dart'; // Import model Product
 
 class AddProductScreen extends StatefulWidget {
   static const routeName = '/add-product';
 
-  const AddProductScreen({super.key});
+  // Tambahkan parameter opsional untuk produk yang akan diedit
+  final Product? product;
+
+  const AddProductScreen({super.key, this.product});
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
@@ -19,30 +23,38 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
-  final _imageUrlController = TextEditingController(); // <<< Gunakan ini untuk URL gambar
-  final _categoryController = TextEditingController(); // Untuk kategori
-  
-  // File? _selectedImage; // <<< HAPUS INI
+  final _imageUrlController = TextEditingController();
+  final _categoryController = TextEditingController();
+
   bool _isLoading = false;
-  
-  String? _selectedCategory; // Untuk menyimpan kategori yang dipilih dari dropdown
+
+  String? _selectedCategory;
 
   final AdminService _adminService = AdminService();
 
-  // >>> HAPUS METODE INI <<<
-  // Future<void> _pickImage() async {
-  //   final pickedFile = await _adminService.pickImage();
-  //   setState(() {
-  //     _selectedImage = pickedFile;
-  //   });
-  // }
+  // Variabel untuk menyimpan apakah ini mode edit atau tambah
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.product != null) {
+      _isEditing = true;
+      // Isi controller dengan data produk yang akan diedit
+      _nameController.text = widget.product!.name;
+      _descriptionController.text = widget.product!.description;
+      _priceController.text = widget.product!.price.toString();
+      _imageUrlController.text = widget.product!.imageUrl;
+      _selectedCategory = widget.product!.category;
+    }
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    _imageUrlController.dispose(); // <<< Dispose controller ini
+    _imageUrlController.dispose();
     _categoryController.dispose();
     super.dispose();
   }
@@ -64,7 +76,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
             !_imageUrlController.text.endsWith('.jpg') &&
             !_imageUrlController.text.endsWith('.jpeg'))) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap masukkan URL gambar yang valid (.png, .jpg, .jpeg).')),
+        const SnackBar(
+            content: Text('Harap masukkan URL gambar yang valid (.png, .jpg, .jpeg).')),
       );
       return;
     }
@@ -81,24 +94,40 @@ class _AddProductScreenState extends State<AddProductScreen> {
     });
 
     try {
-      await _adminService.addProductToFirestore(
-        name: _nameController.text,
-        description: _descriptionController.text,
-        price: double.parse(_priceController.text),
-        imageUrl: _imageUrlController.text, // <<< Gunakan URL dari controller
-        category: _selectedCategory!,
-      );
+      if (_isEditing) {
+        // Logika untuk mengedit produk
+        await _adminService.updateProductInFirestore(
+          id: widget.product!.id, // Gunakan ID produk yang ada
+          name: _nameController.text,
+          description: _descriptionController.text,
+          price: double.parse(_priceController.text),
+          imageUrl: _imageUrlController.text,
+          category: _selectedCategory!,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Produk berhasil diperbarui!')),
+        );
+      } else {
+        // Logika untuk menambahkan produk baru
+        await _adminService.addProductToFirestore(
+          name: _nameController.text,
+          description: _descriptionController.text,
+          price: double.parse(_priceController.text),
+          imageUrl: _imageUrlController.text,
+          category: _selectedCategory!,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Produk berhasil ditambahkan!')),
+        );
+      }
 
-      // Setelah berhasil menambahkan, minta ProductsProvider untuk memuat ulang data
+      // Setelah berhasil menambahkan/memperbarui, minta ProductsProvider untuk memuat ulang data
       await Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Produk berhasil ditambahkan!')),
-      );
       Navigator.of(context).pop(); // Kembali ke layar sebelumnya
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menambahkan produk: $error')),
+        SnackBar(content: Text('Gagal menyimpan produk: $error')),
       );
       debugPrint('Error saving product in AddProductScreen: $error');
     } finally {
@@ -112,7 +141,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tambah Produk Baru'),
+        title: Text(_isEditing ? 'Edit Produk' : 'Tambah Produk Baru'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -204,7 +233,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         return null;
                       },
                     ),
-                    // >>> GANTI BAGIAN PEMILIHAN GAMBAR DENGAN TEXTFORMFIELD UNTUK URL GAMBAR <<<
                     TextFormField(
                       controller: _imageUrlController,
                       decoration: const InputDecoration(labelText: 'URL Gambar Produk'),
@@ -221,6 +249,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           return 'Harap masukkan URL gambar yang valid (.png, .jpg, .jpeg).';
                         }
                         return null;
+                      },
+                      onChanged: (_) {
+                        setState(() {}); // Memperbarui UI saat URL gambar berubah
                       },
                     ),
                     const SizedBox(height: 10),
@@ -247,12 +278,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             ),
                           )
                         : const SizedBox.shrink(), // Sembunyikan jika URL kosong
-                    // >>> AKHIR PERBAIKAN BAGIAN GAMBAR <<<
 
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _saveProduct,
-                      child: const Text('Tambah Produk'),
+                      child: Text(_isEditing ? 'Simpan Perubahan' : 'Tambah Produk'),
                     ),
                   ],
                 ),

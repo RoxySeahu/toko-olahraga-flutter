@@ -34,15 +34,22 @@ class AppDrawer extends StatelessWidget {
             children: <Widget>[
               // Header Drawer
               AppBar(
-                title: const Text('Halo Pengguna!'), // Judul drawer
+                title: const Text(
+                  'Halo Pengguna!', // Judul drawer
+                  style: TextStyle(color: Colors.white), // Teks putih agar kontras dengan teal
+                ),
                 automaticallyImplyLeading: false, // Jangan tampilkan tombol back otomatis
+                backgroundColor: Colors.teal, // Mengubah warna AppBar drawer menjadi teal
               ),
               const Divider(), // Pembatas
 
               // Opsi Menu 'Keranjang'
               ListTile(
-                leading: const Icon(Icons.shopping_cart), // Ikon keranjang
-                title: const Text('Keranjang'), // Teks menu
+                leading: const Icon(Icons.shopping_cart, color: Colors.teal), // Mengubah warna ikon menjadi teal
+                title: const Text(
+                  'Keranjang',
+                  style: TextStyle(color: Colors.blueGrey), // Menggunakan abu-abu untuk teks menu
+                ),
                 onTap: () {
                   // Tutup drawer dan navigasi ke CartScreen
                   Navigator.of(context).pop(); // Menutup drawer
@@ -55,8 +62,11 @@ class AppDrawer extends StatelessWidget {
               // Ini hanya akan muncul jika pengguna yang login adalah admin
               if (isAdmin) // Kondisi: hanya tampil jika isAdmin true
                 ListTile(
-                  leading: const Icon(Icons.admin_panel_settings), // Ikon admin
-                  title: const Text('Kelola Produk(Admin/Owner)'), // Teks menu
+                  leading: const Icon(Icons.admin_panel_settings, color: Colors.teal), // Mengubah warna ikon menjadi teal
+                  title: const Text(
+                    'Kelola Produk (Admin/Owner)',
+                    style: TextStyle(color: Colors.blueGrey), // Menggunakan abu-abu untuk teks menu
+                  ),
                   onTap: () {
                     // Tutup drawer dan navigasi ke ProductsManagementScreen
                     Navigator.of(context).pop(); // Menutup drawer
@@ -65,21 +75,13 @@ class AppDrawer extends StatelessWidget {
                 ),
               if (isAdmin) const Divider(), // Pembatas (juga hanya tampil jika isAdmin true)
 
-              // >>> BAGIAN INI DIHILANGKAN: Opsi Menu 'Kembali' <<<
-              // ListTile(
-              //   leading: const Icon(Icons.arrow_back),
-              //   title: const Text('Kembali'),
-              //   onTap: () {
-              //     Navigator.of(context).pop(); // Tutup drawer terlebih dahulu
-              //     Navigator.of(context).pushReplacementNamed('/');
-              //   },
-              // ),
-              // const Divider(), // Divider juga dihilangkan
-
               // Opsi Menu 'Logout'
               ListTile(
-                leading: const Icon(Icons.exit_to_app), // Ikon logout
-                title: const Text('Logout'), // Teks menu
+                leading: const Icon(Icons.exit_to_app, color: Colors.teal), // Mengubah warna ikon menjadi teal
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.blueGrey), // Menggunakan abu-abu untuk teks menu
+                ),
                 onTap: () {
                   Navigator.of(context).pop(); // Tutup drawer
                   // Lakukan sign out dari Firebase Authentication

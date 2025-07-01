@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/product_provider.dart';
 import 'package:toko_olahraga/screens/admin/add_product_screen.dart';
-// ignore: unused_import
-import 'package:toko_olahraga/screens/home/home_screen.dart'; 
+import 'package:toko_olahraga/screens/home/home_screen.dart';
+import 'package:toko_olahraga/models/product.dart'; // <<< Tambahkan import ini
 
 class ProductsManagementScreen extends StatefulWidget {
   static const routeName = '/products-management';
@@ -51,6 +51,16 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
     await Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
   }
 
+  // <<< Tambahkan metode ini untuk mengedit produk
+  void _editProduct(BuildContext context, Product product) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => AddProductScreen(product: product),
+      ),
+    );
+  }
+  // Tambahan kode di atas <<<
+
   @override
   Widget build(BuildContext context) {
     final productsData = Provider.of<ProductsProvider>(context);
@@ -65,7 +75,7 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
             // CATATAN PENTING: Ini mengabaikan status autentikasi di main.dart
             // sehingga jika pengguna logout saat di layar ini, mereka akan dibawa ke HomeScreen
             // yang mungkin kurang aman. Pastikan rute '/home' Anda selalu mengarah ke HomeScreen.
-            Navigator.of(context).pushReplacementNamed('/home');
+            Navigator.of(context).pushReplacementNamed(HomeScreen.routeName); // Menggunakan routeName dari HomeScreen
           },
         ),
         actions: [
@@ -113,9 +123,18 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
                               },
                             ),
                             trailing: SizedBox(
-                              width: 100,
+                              width: 100, // <<< Sesuaikan lebar agar ada ruang untuk kedua tombol
                               child: Row(
                                 children: [
+                                  // <<< Tombol Edit ditambahkan di sini
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () {
+                                      _editProduct(context, productsData.products[i]);
+                                    },
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  // Tombol Delete yang sudah ada
                                   IconButton(
                                     icon: const Icon(Icons.delete),
                                     onPressed: () async {

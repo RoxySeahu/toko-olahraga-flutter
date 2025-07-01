@@ -72,4 +72,6 @@ class AdminService {
       rethrow;
     }
   }
+
+  updateProductInFirestore({required String id, required String name, required String description, required double price, required String imageUrl, required String category}) {}
 }

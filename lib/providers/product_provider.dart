@@ -5,7 +5,7 @@ import '../models/product.dart';
 class ProductsProvider with ChangeNotifier {
   List<Product> _products = [];
   List<String> _categories = [];
-  final bool _isLoading = false; // Status loading global (tidak selalu digunakan jika dihandle per layar)
+  bool _isLoading = false; // Status loading global (tidak selalu digunakan jika dihandle per layar)
 
   List<Product> get products {
     return [..._products];
@@ -34,9 +34,8 @@ class ProductsProvider with ChangeNotifier {
     return _products.where((prod) => prod.category == categoryName).toList();
   }
 
-  Future<void> fetchAndSetProducts() async {
-    // _isLoading = true; // Jika Anda ingin ini menjadi status loading global
-    // notifyListeners();
+  Future<void> fetchAndSetProducts() async { _isLoading = true; 
+   notifyListeners();
 
     try {
       final querySnapshot = await FirebaseFirestore.instance.collection('products').get();
@@ -72,14 +71,7 @@ class ProductsProvider with ChangeNotifier {
     }
   }
 
-  // Metode untuk menambahkan produk (digunakan oleh AdminService, bukan ProductProvider langsung)
-  // Biarkan kosong atau hapus jika AdminService yang menanganinya sepenuhnya
-  /*
-  Future<void> addProduct(Product product) async {
-    // Implementasi ini seharusnya sudah di AdminService.
-    // Jika Anda punya versi ini di sini, bisa dihapus atau diadaptasi.
-  }
-  */
+
 
   Future<void> deleteProduct(String id) async {
     final existingProductIndex = _products.indexWhere((prod) => prod.id == id);
