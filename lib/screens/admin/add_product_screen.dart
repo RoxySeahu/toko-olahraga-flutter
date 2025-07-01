@@ -122,9 +122,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
       }
 
       // Setelah berhasil menambahkan/memperbarui, minta ProductsProvider untuk memuat ulang data
+      // AKTIFKAN KEMBALI BARIS INI
       await Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
 
-      Navigator.of(context).pop(); // Kembali ke layar sebelumnya
+      // Teruskan nilai 'true' saat pop untuk menunjukkan bahwa perubahan telah dilakukan
+      Navigator.of(context).pop(true); // Kembali ke layar sebelumnya dengan hasil true
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal menyimpan produk: $error')),

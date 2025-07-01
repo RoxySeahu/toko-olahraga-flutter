@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/product_provider.dart';
 import 'package:toko_olahraga/screens/admin/add_product_screen.dart';
 import 'package:toko_olahraga/screens/home/home_screen.dart';
-import 'package:toko_olahraga/models/product.dart'; // <<< Tambahkan import ini
+import 'package:toko_olahraga/models/product.dart';
 
 class ProductsManagementScreen extends StatefulWidget {
   static const routeName = '/products-management';
@@ -51,15 +51,20 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
     await Provider.of<ProductsProvider>(context, listen: false).fetchAndSetProducts();
   }
 
-  // <<< Tambahkan metode ini untuk mengedit produk
   void _editProduct(BuildContext context, Product product) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (ctx) => AddProductScreen(product: product),
       ),
-    );
+    ).then((result) {
+      // Refresh products after returning from AddProductScreen (after edit/add)
+      // We check 'result' if you want to pass a specific indicator from AddProductScreen
+      // For simplicity, we just refresh if we popped from AddProductScreen
+      if (result == true) { // Assuming true is passed when an update/add occurred
+         _refreshProducts(context);
+      }
+    });
   }
-  // Tambahan kode di atas <<<
 
   @override
   Widget build(BuildContext context) {
@@ -71,18 +76,19 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // >>> PERUBAHAN DI SINI: Selalu arahkan ke HomeScreen secara eksplisit <<<
-            // CATATAN PENTING: Ini mengabaikan status autentikasi di main.dart
-            // sehingga jika pengguna logout saat di layar ini, mereka akan dibawa ke HomeScreen
-            // yang mungkin kurang aman. Pastikan rute '/home' Anda selalu mengarah ke HomeScreen.
-            Navigator.of(context).pushReplacementNamed(HomeScreen.routeName); // Menggunakan routeName dari HomeScreen
+            Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
           },
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.of(context).pushNamed(AddProductScreen.routeName);
+              Navigator.of(context).pushNamed(AddProductScreen.routeName)
+              .then((result) {
+                if (result == true) { // Refresh if a new product was added
+                  _refreshProducts(context);
+                }
+              });
             },
           ),
         ],
@@ -123,10 +129,9 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
                               },
                             ),
                             trailing: SizedBox(
-                              width: 100, // <<< Sesuaikan lebar agar ada ruang untuk kedua tombol
+                              width: 100,
                               child: Row(
                                 children: [
-                                  // <<< Tombol Edit ditambahkan di sini
                                   IconButton(
                                     icon: const Icon(Icons.edit),
                                     onPressed: () {
@@ -134,7 +139,6 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> {
                                     },
                                     color: Theme.of(context).primaryColor,
                                   ),
-                                  // Tombol Delete yang sudah ada
                                   IconButton(
                                     icon: const Icon(Icons.delete),
                                     onPressed: () async {

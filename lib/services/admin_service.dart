@@ -23,18 +23,10 @@ class AdminService {
     return null;
   }
 
-  // Metode uploadImageToFirebase dihapus karena kita hanya menggunakan URL
-  /*
-  Future<String> uploadImageToFirebase(File imageFile, String productId) async {
-    // Logika upload dihapus
-  }
-  */
-
   Future<void> addProductToFirestore({
     required String name,
     required String description,
     required double price,
-    // required File? imageFile, // Hapus jika sudah beralih ke URL
     required String imageUrl, // Menggunakan URL gambar langsung
     required String category,
   }) async {
@@ -48,11 +40,6 @@ class AdminService {
     try {
       final newProductRef = _firestore.collection('products').doc();
       final String productId = newProductRef.id;
-
-      // Logika upload gambar via File dihapus
-      // if (imageFile != null) {
-      //   // imageUrl = await uploadImageToFirebase(imageFile, productId);
-      // }
 
       final newProduct = Product(
         id: productId,
@@ -73,5 +60,50 @@ class AdminService {
     }
   }
 
-  updateProductInFirestore({required String id, required String name, required String description, required double price, required String imageUrl, required String category}) {}
+  // >>> Implementasi metode updateProductInFirestore yang benar <<<
+  Future<void> updateProductInFirestore({
+    required String id, // ID dokumen produk yang akan diupdate
+    required String name,
+    required String description,
+    required double price,
+    required String imageUrl,
+    required String category,
+  }) async {
+    final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (currentUserUid == null) {
+      debugPrint('Error: Pengguna tidak terautentikasi saat mencoba memperbarui produk.');
+      throw Exception('Autentikasi diperlukan untuk memperbarui produk.');
+    }
+
+    try {
+      // Ambil referensi dokumen produk berdasarkan ID
+      final productDocRef = _firestore.collection('products').doc(id);
+
+      // Perbarui data di Firestore
+      await productDocRef.update({
+        'name': name,
+        'description': description,
+        'price': price,
+        'imageUrl': imageUrl,
+        'category': category,
+        // Anda mungkin ingin menambahkan 'updatedAt': Timestamp.now() di sini juga
+      });
+      debugPrint('Produk dengan ID $id berhasil diperbarui di Firestore.');
+    } catch (e) {
+      debugPrint('Gagal memperbarui produk dengan ID $id di Firestore melalui AdminService: $e');
+      rethrow; // Lemparkan kembali error untuk ditangani di UI
+    }
+  }
+
+  // Metode untuk menghapus produk dari Firestore (Anda mungkin memiliki ini di ProductsProvider atau AdminService)
+  Future<void> deleteProductFromFirestore(String productId) async {
+    try {
+      await _firestore.collection('products').doc(productId).delete();
+      debugPrint('Produk dengan ID $productId berhasil dihapus dari Firestore');
+    } catch (e) {
+      debugPrint('Error saat menghapus produk dari Firestore: $e');
+      rethrow;
+    }
+  }
 }
