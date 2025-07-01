@@ -5,7 +5,7 @@ import 'package:toko_olahraga/providers/cart_provider.dart';
 import 'package:toko_olahraga/screens/products/product_detail_screen.dart';
 
 class ProductItem extends StatelessWidget {
-  const ProductItem({Key? key}) : super(key: key);
+  const ProductItem({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +37,7 @@ class ProductItem extends StatelessWidget {
               Icons.shopping_cart,
             ),
             onPressed: () {
+              // FIX: Pass only the product object
               cart.addItem(product);
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(

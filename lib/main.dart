@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -26,7 +27,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -89,14 +90,20 @@ class MyApp extends StatelessWidget {
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (ctx, userSnapshot) {
             if (userSnapshot.connectionState == ConnectionState.waiting) {
-              print('DEBUG: Auth state di main.dart: Menunggu...');
+              if (kDebugMode) {
+                print('DEBUG: Auth state di main.dart: Menunggu...');
+              }
               return const Center(child: CircularProgressIndicator());
             }
             if (userSnapshot.hasData) {
-              print('DEBUG: Auth state di main.dart: Pengguna login: ${userSnapshot.data!.uid}');
+              if (kDebugMode) {
+                print('DEBUG: Auth state di main.dart: Pengguna login: ${userSnapshot.data!.uid}');
+              }
               return const HomeScreen();
             }
-            print('DEBUG: Auth state di main.dart: Tidak ada pengguna login. Mengarahkan ke LoginScreen.');
+            if (kDebugMode) {
+              print('DEBUG: Auth state di main.dart: Tidak ada pengguna login. Mengarahkan ke LoginScreen.');
+            }
             return const LoginScreen();
           },
         ),

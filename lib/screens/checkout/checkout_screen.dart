@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use, unnecessary_to_list_in_spreads
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/cart_provider.dart';
@@ -31,7 +33,7 @@ class Address {
 class CheckoutScreen extends StatefulWidget {
   static const routeName = '/checkout';
 
-  const CheckoutScreen({Key? key}) : super(key: key);
+  const CheckoutScreen({super.key});
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -55,7 +57,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _shippingEstimate = ''; // Estimasi waktu pengiriman yang akan ditampilkan
   
   Address? _selectedAddress; // Alamat yang dipilih untuk pengiriman
-  List<Address> _userAddresses = []; // Daftar alamat pengguna (disimpan di memori untuk sesi ini)
+  final List<Address> _userAddresses = []; // Daftar alamat pengguna (disimpan di memori untuk sesi ini)
   Address? _editingAddress; // Alamat yang sedang diedit (null jika menambah baru)
 
   bool _isProcessingOrder = false; // Status saat memproses pesanan

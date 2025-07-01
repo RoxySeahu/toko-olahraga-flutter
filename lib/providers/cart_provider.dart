@@ -25,7 +25,8 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
-  void addItem(Product product) {
+  // FIX: Simplified addItem method to only accept Product object
+  void addItem(Product product, [double? price]) {
     if (_items.containsKey(product.id)) {
       _items.update(
         product.id,
@@ -36,6 +37,8 @@ class CartProvider with ChangeNotifier {
           quantity: existingCartItem.quantity + 1,
           price: existingCartItem.price,
           imageUrl: existingCartItem.imageUrl,
+          // Assuming cart_item.dart's constructor takes productCategory
+          productCategory: existingCartItem.productCategory,
         ),
       );
     } else {
@@ -48,6 +51,8 @@ class CartProvider with ChangeNotifier {
           quantity: 1,
           price: product.price,
           imageUrl: product.imageUrl,
+          // Assuming cart_item.dart's constructor takes productCategory
+          productCategory: product.category,
         ),
       );
     }
@@ -73,6 +78,8 @@ class CartProvider with ChangeNotifier {
           quantity: existingCartItem.quantity - 1,
           price: existingCartItem.price,
           imageUrl: existingCartItem.imageUrl,
+          // Assuming cart_item.dart's constructor takes productCategory
+          productCategory: existingCartItem.productCategory,
         ),
       );
     } else {

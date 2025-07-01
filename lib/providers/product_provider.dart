@@ -5,7 +5,7 @@ import '../models/product.dart';
 class ProductsProvider with ChangeNotifier {
   List<Product> _products = [];
   List<String> _categories = [];
-  bool _isLoading = false; // Status loading global (tidak selalu digunakan jika dihandle per layar)
+  final bool _isLoading = false; // Status loading global (tidak selalu digunakan jika dihandle per layar)
 
   List<Product> get products {
     return [..._products];

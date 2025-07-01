@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:toko_olahraga/services/admin_service.dart';
 import 'package:provider/provider.dart';
@@ -6,7 +8,7 @@ import 'package:toko_olahraga/providers/product_provider.dart';
 class AddProductScreen extends StatefulWidget {
   static const routeName = '/add-product';
 
-  const AddProductScreen({Key? key}) : super(key: key);
+  const AddProductScreen({super.key});
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();

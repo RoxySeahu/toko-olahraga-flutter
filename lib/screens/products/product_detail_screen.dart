@@ -7,7 +7,7 @@ import 'package:intl/intl.dart'; // Import intl
 class ProductDetailScreen extends StatelessWidget {
   static const routeName = '/product-detail';
 
-  const ProductDetailScreen({Key? key}) : super(key: key);
+  const ProductDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +72,7 @@ class ProductDetailScreen extends StatelessWidget {
             const SizedBox(height: 30),
             ElevatedButton.icon(
               onPressed: () {
+                // FIX: Pass only the loadedProduct object
                 cart.addItem(loadedProduct);
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 ScaffoldMessenger.of(context).showSnackBar(
