@@ -10,10 +10,10 @@ class CartItemWidget extends StatelessWidget {
   final NumberFormat currencyFormatter; // Tambahkan properti formatter
 
   const CartItemWidget({
-    Key? key,
+    super.key,
     required this.cartItem,
     required this.currencyFormatter, // Wajibkan formatter
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

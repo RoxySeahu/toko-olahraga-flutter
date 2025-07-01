@@ -4,7 +4,7 @@ import 'package:toko_olahraga/widgets/app_drawer.dart';
 class OrdersScreen extends StatelessWidget {
   static const routeName = '/orders';
 
-  const OrdersScreen({Key? key}) : super(key: key);
+  const OrdersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

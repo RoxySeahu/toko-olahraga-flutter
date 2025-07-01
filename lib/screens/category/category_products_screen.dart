@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toko_olahraga/providers/product_provider.dart';
@@ -10,10 +12,10 @@ class CategoryProductsScreen extends StatefulWidget {
   final String categoryName;
 
   const CategoryProductsScreen({
-    Key? key,
+    super.key,
     required this.categoryTitle,
     required this.categoryName,
-  }) : super(key: key);
+  });
 
   @override
   State<CategoryProductsScreen> createState() => _CategoryProductsScreenState();

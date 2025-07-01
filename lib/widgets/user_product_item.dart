@@ -8,10 +8,10 @@ class UserProductItem extends StatelessWidget {
   final Function refreshProducts; // Callback untuk refresh daftar produk setelah edit/delete
 
   const UserProductItem({
-    Key? key,
+    super.key,
     required this.product,
     required this.refreshProducts,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
