@@ -325,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       SizedBox(height: 8),
                                       Text(
-                                        'Produk pilihan terbaik dengan diskon menarik.', // Ubah teks agar lebih ringkas
+                                        'Kualitas Sesuai Harga', 
                                         style: TextStyle(
                                           color: Colors.white70,
                                           fontSize: 16,
